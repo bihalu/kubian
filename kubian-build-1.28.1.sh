@@ -27,6 +27,8 @@ mkdir -p deb/
 
 aptitude clean
 
+SKIP_PACKAGES=0
+
 for PACKAGE in "${PACKAGES[@]}" ; do
   # don't process commented out packages
   [[ ${PACKAGE:0:1} = \# ]] && continue
@@ -39,9 +41,13 @@ for PACKAGE in "${PACKAGES[@]}" ; do
   PACKAGE_NAME="${PACKAGE_DATA[0]%:amd64}"
   PACKAGE_VERSION="${PACKAGE_DATA[1]}"
   PACKAGE_ARCH="${PACKAGE_DATA[2]}"
+  PACKAGE_FILE="${PACKAGE_NAME}_${PACKAGE_VERSION}_${PACKAGE_ARCH}.deb"
+
+  # skip download if already available
+  [[ -f deb/${PACKAGE_FILE} ]] && continue
 
   aptitude --download-only reinstall -y $PACKAGE_NAME
-  PACKAGE_FILE="${PACKAGE_NAME}_${PACKAGE_VERSION}_${PACKAGE_ARCH}.deb"
   cp /var/cache/apt/archives/${PACKAGE_FILE} deb/
+  [[ $? != 0 ]] && exit 1
 done
 
