@@ -307,6 +307,11 @@ prometheus:
               storage: 10Gi
 EOF_PROM_VALUES
 
+# kubelet systemd service -> kubelet.service
+cat - > artefact/kubelet.service <<EOF_KUBELET_SVC
+TODO
+EOF_KUBELET_SVC
+
 ################################################################################
 # create setup.sh
 cat - > setup.sh <<EOF_SETUP
@@ -365,7 +370,7 @@ swapoff -a
 ################################################################################
 # install packages
 PACKAGES=\$(find deb -name "*.deb")
-dpkg --install -y \$PACKAGES
+dpkg --install \$PACKAGES
 
 ################################################################################
 # install nerdctl and containerd
@@ -392,7 +397,7 @@ systemctl enable containerd --now
 ################################################################################
 # import container images
 echo "Be patient import container images ..."
-nerdctl -n=k8s.io image import container/images.tar
+nerdctl load --namespace k8s.io --input container/images.tar
 
 ################################################################################
 # init
