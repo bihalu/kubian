@@ -1,7 +1,7 @@
 #!/bin/bash
 
 NAME="kubian-setup"
-VERSION="1.28.0"
+VERSION="1.28.1"
 POD_NETWORK_CIDR="10.244.0.0/16"
 SVC_NETWORK_CIDR="10.96.0.0/12"
 EMAIL="john.doe@inter.net"
@@ -156,9 +156,9 @@ fi
 ################################################################################
 # helm charts -> chart_url chart_repo chart_name chart_version
 readarray -t HELM_CHARTS <<EOL_HELM_CHARTS
-https://prometheus-community.github.io/helm-charts prometheus-community kube-prometheus-stack 48.3.1
-https://openebs.github.io/charts openebs openebs 3.8.0
-https://charts.jetstack.io jetstack cert-manager v1.12.3
+https://prometheus-community.github.io/helm-charts prometheus-community kube-prometheus-stack 50.3.1
+https://openebs.github.io/charts openebs openebs 3.9.0
+https://charts.jetstack.io jetstack cert-manager v1.12.4
 https://kubernetes.github.io/ingress-nginx ingress-nginx ingress-nginx 4.7.1
 https://projectcalico.docs.tigera.io/charts projectcalico tigera-operator v3.26.1
 EOL_HELM_CHARTS
@@ -360,7 +360,7 @@ cp artefact/calico-ipam /usr/local/libexec/cni/ && chmod 755 /usr/local/libexec/
 ################################################################################
 # enable services and start container runtime
 systemctl enable kubelet
-systemctl enable containerd
+systemctl enable containerd --now
 
 # fix pause container use same version as kubernetes
 #sed -i 's/pause:3.8/pause:3.9/' /etc/containerd/config.toml
@@ -435,11 +435,11 @@ if [ \$SINGLE = true ] ; then
   fi
 
   ################################################################################
-  # install openebs openebs 3.8.0
-  helm upgrade --install openebs helm/openebs/openebs-3.8.0.tgz \
+  # install openebs openebs 3.9.0
+  helm upgrade --install openebs helm/openebs/openebs-3.9.0.tgz \
     --create-namespace \
     --namespace openebs \
-    --version 3.8.0
+    --version 3.9.0
 
   # set default storage class
   kubectl patch storageclass openebs-hostpath -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
@@ -456,20 +456,20 @@ if [ \$SINGLE = true ] ; then
 
   ################################################################################
   # install cert-manager
-  helm upgrade --install cert-manager helm/cert-manager/cert-manager-v1.12.3.tgz \
+  helm upgrade --install cert-manager helm/cert-manager/cert-manager-v1.12.4.tgz \
     --create-namespace \
     --namespace cert-manager \
-    --version v1.12.3 \
+    --version v1.12.4 \
     --set installCRDs=true
 
   kubectl apply -f artefact/issuer-letsencrypt.yaml
 
   ################################################################################
   # alertmanager, prometheus and grafana 
-  helm upgrade --install kube-prometheus-stack helm/kube-prometheus-stack/kube-prometheus-stack-48.3.1.tgz \
+  helm upgrade --install kube-prometheus-stack helm/kube-prometheus-stack/kube-prometheus-stack-50.3.1.tgz \
     --create-namespace \
     --namespace kube-prometheus-stack \
-    --version 48.3.1 \
+    --version 50.3.1 \
     --set alertmanager.service.type=NodePort \
     --set prometheus.service.type=NodePort \
     --set grafana.service.type=NodePort \
@@ -512,10 +512,10 @@ if [ \$JOIN = true ] && [ \$WORKER = true ] ; then
 
   ################################################################################
   # install cert-manager
-  helm upgrade --install cert-manager helm/cert-manager/cert-manager-v1.12.3.tgz \
+  helm upgrade --install cert-manager helm/cert-manager/cert-manager-v1.12.4.tgz \
     --create-namespace \
     --namespace cert-manager \
-    --version v1.12.3 \
+    --version v1.12.4 \
     --set installCRDs=true
 
   kubectl apply -f artefact/issuer-letsencrypt.yaml
@@ -551,7 +551,7 @@ fi
 
 ################################################################################
 # cleanup
-rm -rf setup.sh alpine/ container/ artefact/ helm/  
+#rm -rf setup.sh deb/ container/ artefact/ helm/  
 
 ################################################################################
 # finish
@@ -588,7 +588,7 @@ fi
 
 ################################################################################
 # cleanup
-CLEANUP=true
+CLEANUP=false
 
 if [[ ${CLEANUP} = true ]] ; then
   rm -rf $TAR_FILE setup.sh deb/ container/ artefact/ helm/
