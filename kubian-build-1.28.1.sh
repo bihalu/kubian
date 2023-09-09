@@ -52,7 +52,7 @@ for PACKAGE in "${PACKAGES[@]}" ; do
   # skip download if already available
   [[ -f deb/${PACKAGE_FILE} ]] && continue
 
-  aptitude --download-only reinstall -y $PACKAGE_NAME
+  aptitude --download-only install -y $PACKAGE_NAME
   cp /var/cache/apt/archives/${PACKAGE_FILE} deb/
   [[ $? != 0 ]] && exit 1
 done
@@ -116,9 +116,9 @@ SKIP_IMAGES=0
 PULL=true
 CONTAINER_IMAGES=""
 
-# check for nerdctl
-nerdctl version
-[[ $? != 0 ]] && echo "can't find nerdctl" && exit 1
+# check for ctr
+ctr version
+[[ $? != 0 ]] && echo "can't find ctr" && exit 1
 
 for IMAGE in "${IMAGES[@]}" ; do
   # don't process commented out images
@@ -129,7 +129,7 @@ for IMAGE in "${IMAGES[@]}" ; do
 
   # pull image
   if [[ ${PULL} = true ]] ; then
-    nerdctl pull ${IMAGE}
+    ctr image pull ${IMAGE}
 
     # exit on install error
     [[ $? != 0 ]] && echo "can't pull image with nerdctl" && exit 1
@@ -143,6 +143,10 @@ done
 SAVE=true
 
 if [[ ${SAVE} = true ]] ; then
+  # check for nerdctl
+  nerdctl version
+  [[ $? != 0 ]] && echo "can't find nerdctl" && exit 1
+
   # save images as tar file
   mkdir -p container
 
@@ -150,7 +154,8 @@ if [[ ${SAVE} = true ]] ; then
   [[ -f container/images.tar ]] && rm -f container/images.tar
 
   # save all images in container images tar file
-  nerdctl save --multi-image-archive --output container/images.tar ${CONTAINER_IMAGES}
+  echo "Be patient saving container images ..."
+  nerdctl save --output container/images.tar ${CONTAINER_IMAGES}
 fi
 
 ################################################################################
@@ -185,6 +190,9 @@ for CHART in "${HELM_CHARTS[@]}" ; do
   CHART_NAME="${CHART_DATA[2]}"
   CHART_VERSION="${CHART_DATA[3]}"
 
+  # continue if helmchart exists
+  [[ -f helm/${CHART_NAME}/${CHART_NAME}-${CHART_VERSION}.tgz ]] && continue
+
   # add helm repo
   helm repo add ${CHART_REPO} ${CHART_URL} 
 
@@ -206,26 +214,41 @@ done
 mkdir -p artefact
 
 # download kubeadm, kubectl and kubelet v1.28.1 -> https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.28.md#client-binaries
-wget https://dl.k8s.io/v1.28.1/kubernetes-node-linux-amd64.tar.gz -P artefact
-# install:
-# tar Cxzvvf /tmp artefact/kubernetes-node-linux-amd64.tar.gz && mv /tmp/kubernetes/node/bin/* /usr/local/bin/
+KUBERNETES="kubernetes-node-linux-amd64.tar.gz"
+if [[ -f artefact/${KUBERNETES} ]] ; then
+  echo "file exists artefact/${KUBERNETES}" 
+else
+  wget https://dl.k8s.io/v1.28.1/${KUBERNETES} -P artefact
+fi
 
 # download nerdctl-full v1.5.0 -> https://github.com/containerd/nerdctl/releases/tag/v1.5.0
-wget https://github.com/containerd/nerdctl/releases/download/v1.5.0/nerdctl-full-1.5.0-linux-amd64.tar.gz -P artefact
-# install:
-# tar Cxzvvf /usr/local artefact/nerdctl-full-1.5.0-linux-amd64.tar.gz
+NERDCTL="nerdctl-full-1.5.0-linux-amd64.tar.gz"
+if [[ -f artefact/${NERDCTL} ]] ; then
+  echo "file exists artefact/${NERDCTL}" 
+else
+  wget https://github.com/containerd/nerdctl/releases/download/v1.5.0/${NERDCTL} -P artefact
+fi
  
 # download helm v3.12.3 -> https://github.com/helm/helm/releases/tag/v3.12.3
-wget https://get.helm.sh/helm-v3.12.3-linux-amd64.tar.gz -P artefact
-# install:
-# tar Cxzvvf /tmp artefact/helm-v3.12.3-linux-amd64.tar.gz && cp /tmp/linux-amd64/helm . && mv helm /usr/local/bin/
+HELM="helm-v3.12.3-linux-amd64.tar.gz"
+if [[ -f artefact/${HELM} ]] ; then
+  echo "file exists artefact/${HELM}" 
+else
+  wget https://get.helm.sh/${HELM} -P artefact
+fi
 
 # download calico cni-plugin v3.20.6 -> calico
+if [[ -f artefact/calico ]] ; then
+  echo "file exists artefact/calico" 
+else
   wget https://github.com/projectcalico/cni-plugin/releases/download/v3.20.6/calico-amd64 -O artefact/calico
+fi
+
+if [[ -f artefact/calico-ipam ]] ; then
+  echo "file exists artefact/calico-ipam" 
+else
   wget https://github.com/projectcalico/cni-plugin/releases/download/v3.20.6/calico-ipam-amd64 -O artefact/calico-ipam
-# install:
-#cp artefact/calico /usr/local/libexec/cni/ && chmod 755 /usr/local/libexec/cni/calico
-#cp artefact/calico-ipam /usr/local/libexec/cni/ && chmod 755 /usr/local/libexec/cni/calico-ipam
+fi
 
 # issuer for cert-manager (letsencrypt) -> issuer-letsencrypt.yaml
 cat - > artefact/issuer-letsencrypt.yaml <<EOF_ISSUER
