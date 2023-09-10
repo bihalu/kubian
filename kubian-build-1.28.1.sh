@@ -39,7 +39,7 @@ fi
 # install helm
 helm version 2>&1 > /dev/null
 if [[ $? != 0 ]] ; then
-  wget https://get.helm.sh/helm-v3.12.3-linux-amd64.tar.gz -O - | tar xzf - && cp linux-amd64/helm /usr/local/bin/
+  wget https://get.helm.sh/helm-v3.12.3-linux-amd64.tar.gz -O - | tar Cxzf /tmp - && cp /tmp/linux-amd64/helm /usr/local/bin/
 fi
 
 ################################################################################
