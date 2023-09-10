@@ -408,6 +408,13 @@ dpkg --install \$PACKAGES
 # install nerdctl and containerd
 tar Cxzvf /usr/local artefact/nerdctl-full-1.5.0-linux-amd64.tar.gz
 
+# configure containerd 
+mkdir -p /etc/containerd
+containerd config default | tee /etc/containerd/config.toml
+
+# fix pause container use same version as kubernetes
+sed -i 's/pause:3.8/pause:3.9/' /etc/containerd/config.toml
+
 ################################################################################
 # install helm
 tar Cxzvf /tmp artefact/helm-v3.12.3-linux-amd64.tar.gz && cp /tmp/linux-amd64/helm /usr/local/bin/
@@ -426,10 +433,6 @@ cp artefact/calico-ipam /usr/local/libexec/cni/ && chmod 755 /usr/local/libexec/
 systemctl enable kubelet
 systemctl enable containerd --now
 
-# fix pause container use same version as kubernetes
-#sed -i 's/pause:3.8/pause:3.9/' /etc/containerd/config.toml
-#/etc/init.d/containerd start && sleep 5
-
 ################################################################################
 # import container images
 echo "Be patient import container images ..."
@@ -442,14 +445,16 @@ if [ \$INIT = true ] ; then
 
   ################################################################################
   # init cluster
-  CONTROL_PLANE_ENDPOINT=\$(ip -brief address show eth0 | awk '{print \$3}' | awk -F/ '{print \$1}')
+  MY_IP_ADDRESS=\$(ip -brief address show eth0 | awk '{print \$3}' | awk -F/ '{print \$1}')
   kubeadm init \
+    --v=5 \
     --upload-certs \
     --node-name=\$HOSTNAME \
     --pod-network-cidr=$POD_NETWORK_CIDR \
     --service-cidr=$SVC_NETWORK_CIDR \
     --kubernetes-version=$VERSION \
-    --control-plane-endpoint=\$CONTROL_PLANE_ENDPOINT
+    --control-plane-endpoint=\$MY_IP_ADDRESS \
+    --apiserver-advertise-address=\$MY_IP_ADDRESS
   [ \$? != 0 ] && echo "error: can't initialize cluster" && exit 1
 
   ################################################################################
