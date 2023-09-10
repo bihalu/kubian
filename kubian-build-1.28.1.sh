@@ -8,16 +8,14 @@ EMAIL="john.doe@inter.net"
 BUILD_START=$(date +%s)
 INSTALLED_PACKAGES=$(dpkg -l | sed '/^ii/!d' | tr -s ' ' | cut -d ' ' -f 2,3,4)
 
-# check for aptitude
-aptitude --version 2>&1 > /dev/null
-if [[ $? != 0 ]] ; then
-  read -p "aptitude is missing, do you want to install it (y/n)? " ANSWER
-  if [[ "$ANSWER" = "y" ]] ; then
-    apt install -y aptitude
-  else
-    exit 1
-  fi
-fi
+# install aptitude apt-transport-https curl gpg
+apt install -y aptitude apt-transport-https curl gpg
+
+# add kubernetes repository
+tee /etc/apt/sources.list.d/kubernetes.list <<KUBERNETES_REPO_EOF
+deb http://apt.kubernetes.io/ kubernetes-xenial main
+# deb-src http://apt.kubernetes.io/ kubernetes-xenial main
+KUBERNETES_REPO_EOF
 
 # check for nerdctl full (with containerd)
 nerdctl version 2>&1 > /dev/null
@@ -50,6 +48,8 @@ iptables 1.8.9-2 amd64
 libip6tc2:amd64 1.8.9-2 amd64
 libnetfilter-conntrack3:amd64 1.0.9-3 amd64
 libnfnetlink0:amd64 1.0.2-2 amd64
+# ebtables 
+ebtables 2.0.11-5 amd64
 # jq
 jq 1.6-2.1 amd64
 libjq1:amd64 1.6-2.1 amd64
@@ -57,6 +57,21 @@ libonig5:amd64 6.9.8-1 amd64
 # curl
 curl 7.88.1-10+deb12u1 amd64
 libcurl4:amd64 7.88.1-10+deb12u1 amd64
+# ethtool
+ethtool 1:6.1-1 amd64
+# socat
+socat 1.7.4.4-2 amd64
+# conntrack
+conntrack 1:1.4.7-1+b2 amd64
+libnetfilter-conntrack3:amd64 1.0.9-3 amd64
+libnfnetlink0:amd64 1.0.2-2 amd64
+# cri-tools
+cri-tools 1.26.0-00 amd64
+# kubernetes
+kubeadm 1.28.1-00 amd64
+kubectl 1.28.1-00 amd64
+kubelet 1.28.1-00 amd64
+kubernetes-cni 1.2.0-00 amd64
 EOL_PACKAGES
 
 mkdir -p deb/
@@ -232,11 +247,11 @@ done
 mkdir -p artefact
 
 # download kubeadm, kubectl and kubelet v1.28.1 -> https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.28.md#client-binaries
-if [[ -f artefact/kubernetes-node-linux-amd64.tar.gz ]] ; then
-  echo "file exists artefact/kubernetes-node-linux-amd64.tar.gz" 
-else
-  wget https://dl.k8s.io/v1.28.1/kubernetes-node-linux-amd64.tar.gz -P artefact
-fi
+# if [[ -f artefact/kubernetes-node-linux-amd64.tar.gz ]] ; then
+#   echo "file exists artefact/kubernetes-node-linux-amd64.tar.gz" 
+# else
+#   wget https://dl.k8s.io/v1.28.1/kubernetes-node-linux-amd64.tar.gz -P artefact
+# fi
 
 # download nerdctl-full v1.5.0 -> https://github.com/containerd/nerdctl/releases/tag/v1.5.0
 if [[ -f artefact/nerdctl-full-1.5.0-linux-amd64.tar.gz ]] ; then
@@ -266,7 +281,7 @@ else
 fi
 
 # issuer for cert-manager (letsencrypt) -> issuer-letsencrypt.yaml
-cat - > artefact/issuer-letsencrypt.yaml <<EOF_ISSUER
+tee artefact/issuer-letsencrypt.yaml <<EOF_ISSUER
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
@@ -301,7 +316,7 @@ spec:
 EOF_ISSUER
 
 # prometheus values -> prom_values.yaml
-cat - > artefact/prom_values.yaml <<EOF_PROM_VALUES
+tee artefact/prom_values.yaml <<EOF_PROM_VALUES
 alertmanager:
   alertmanagerSpec:
     storage:
@@ -322,14 +337,9 @@ prometheus:
               storage: 10Gi
 EOF_PROM_VALUES
 
-# kubelet systemd service -> kubelet.service
-cat - > artefact/kubelet.service <<EOF_KUBELET_SVC
-TODO
-EOF_KUBELET_SVC
-
 ################################################################################
 # create setup.sh
-cat - > setup.sh <<EOF_SETUP
+tee setup.sh <<EOF_SETUP
 #!/bin/bash
 
 SETUP_START=\$(date +%s)
@@ -370,12 +380,21 @@ WORKER=false
 
 ################################################################################
 # add kernel module for networking stuff
-echo "br_netfilter" > /etc/modules-load.d/k8s.conf
+tee /etc/modules-load.d/k8s.conf <<EOF_MODULES
+overlay
+br_netfilter
+EOF_MODULES
+
+modprobe overlay
 modprobe br_netfilter
-echo "net.bridge.bridge-nf-call-iptables=1" >> /etc/sysctl.conf
-sysctl net.bridge.bridge-nf-call-iptables=1
-echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
-sysctl net.ipv4.ip_forward=1
+
+tee /etc/sysctl.d/kubernetes.conf <<EOF_SYSCTL
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+net.ipv4.ip_forward = 1
+EOF_SYSCTL
+
+sysctl --system
 
 ################################################################################
 # disable swap
@@ -389,15 +408,15 @@ dpkg --install \$PACKAGES
 
 ################################################################################
 # install nerdctl and containerd
-tar Cxzvvf /usr/local artefact/nerdctl-full-1.5.0-linux-amd64.tar.gz
+tar Cxzvf /usr/local artefact/nerdctl-full-1.5.0-linux-amd64.tar.gz
 
 ################################################################################
 # install kubeadm, kubectl and kubelet
-tar Cxzvvf /tmp artefact/kubernetes-node-linux-amd64.tar.gz && mv /tmp/kubernetes/node/bin/* /usr/local/bin/
+#tar Cxzvf /tmp artefact/kubernetes-node-linux-amd64.tar.gz && mv /tmp/kubernetes/node/bin/* /usr/local/bin/
 
 ################################################################################
 # install helm
-tar Cxzvvf /tmp artefact/helm-v3.12.3-linux-amd64.tar.gz && cp /tmp/kubernetes/node/bin/* /usr/local/bin/
+tar Cxzvf /tmp artefact/helm-v3.12.3-linux-amd64.tar.gz && cp /tmp/kubernetes/node/bin/* /usr/local/bin/
 
 ################################################################################
 # install calico cni-plugins
@@ -406,7 +425,7 @@ cp artefact/calico-ipam /usr/local/libexec/cni/ && chmod 755 /usr/local/libexec/
 
 ################################################################################
 # enable services and start container runtime
-#systemctl enable kubelet
+systemctl enable kubelet
 systemctl enable containerd --now
 
 # fix pause container use same version as kubernetes
@@ -607,7 +626,6 @@ SETUP_MINUTES=\$(((\$SETUP_END - \$SETUP_START) / 60))
 SETUP_SECONDS=\$((\$SETUP_END - \$SETUP_START - (\$SETUP_MINUTES * 60)))
 
 echo "setup took \$SETUP_MINUTES minutes \$SETUP_SECONDS seconds"
-
 EOF_SETUP
 
 chmod +x setup.sh
