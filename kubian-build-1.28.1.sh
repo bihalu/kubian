@@ -19,6 +19,8 @@ KUBERNETES_REPO_EOF
 
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --batch --yes --dearmour --output /etc/apt/trusted.gpg.d/cgoogle.gpg
 
+apt update
+
 # install nerdctl full (with containerd)
 nerdctl version 2>&1 > /dev/null
 if [[ $? != 0 ]] ; then
