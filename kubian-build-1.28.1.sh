@@ -57,12 +57,12 @@ libonig5:amd64 6.9.8-1 amd64
 # curl
 curl 7.88.1-10+deb12u1 amd64
 libcurl4:amd64 7.88.1-10+deb12u1 amd64
-# ethtool
-ethtool 1:6.1-1 amd64
+# ethtool (replace colon with %3a in filename)
+ethtool 1%3a6.1-1 amd64
 # socat
 socat 1.7.4.4-2 amd64
-# conntrack
-conntrack 1:1.4.7-1+b2 amd64
+# conntrack (replace colon with %3a in filename)
+conntrack 1%3a1.4.7-1+b2 amd64
 libnetfilter-conntrack3:amd64 1.0.9-3 amd64
 libnfnetlink0:amd64 1.0.2-2 amd64
 # cri-tools
@@ -97,9 +97,15 @@ for PACKAGE in "${PACKAGES[@]}" ; do
   # skip download if already available
   [[ -f deb/${PACKAGE_FILE} ]] && continue
 
+  # download package
   aptitude --download-only install -y $PACKAGE_NAME
   cp /var/cache/apt/archives/${PACKAGE_FILE} deb/
-  [[ $? != 0 ]] && exit 1
+  if [[ $? != 0 ]] ; then
+    # aptitude will not download if package is installed, try download reinstall
+    aptitude --download-only reinstall $PACKAGE_NAME
+    cp /var/cache/apt/archives/${PACKAGE_FILE} deb/
+    [[ $? != 0 ]] && exit 1
+  fi 
 done
 
 ################################################################################
