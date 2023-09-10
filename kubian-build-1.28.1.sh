@@ -11,33 +11,25 @@ INSTALLED_PACKAGES=$(dpkg -l | sed '/^ii/!d' | tr -s ' ' | cut -d ' ' -f 2,3,4)
 # install aptitude apt-transport-https curl gpg
 apt install -y aptitude apt-transport-https curl gpg
 
-# add kubernetes repository
+# add kubernetes repository and import google gpg key
 tee /etc/apt/sources.list.d/kubernetes.list <<KUBERNETES_REPO_EOF
 deb http://apt.kubernetes.io/ kubernetes-xenial main
 # deb-src http://apt.kubernetes.io/ kubernetes-xenial main
 KUBERNETES_REPO_EOF
 
-# check for nerdctl full (with containerd)
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmour -o /etc/apt/trusted.gpg.d/cgoogle.gpg
+
+# install nerdctl full (with containerd)
 nerdctl version 2>&1 > /dev/null
 if [[ $? != 0 ]] ; then
-  read -p "nerdctl is missing, do you want to install it (y/n)? " ANSWER
-  if [[ "$ANSWER" = "y" ]] ; then
-    wget https://github.com/containerd/nerdctl/releases/download/v1.5.0/nerdctl-full-1.5.0-linux-amd64.tar.gz -O - | tar xzf - -C /usr/local
-    systemctl enable containerd --now
-  else
-    exit 1
-  fi
+  wget https://github.com/containerd/nerdctl/releases/download/v1.5.0/nerdctl-full-1.5.0-linux-amd64.tar.gz -O - | tar xzf - -C /usr/local
+  systemctl enable containerd --now
 fi
 
-# check for helm
+# install helm
 helm version 2>&1 > /dev/null
 if [[ $? != 0 ]] ; then
-  read -p "helm is missing, do you want to install it (y/n)? " ANSWER
-  if [[ "$ANSWER" = "y" ]] ; then
-    wget https://get.helm.sh/helm-v3.12.3-linux-amd64.tar.gz -O - | tar xzf - && cp linux-amd64/helm /usr/local/bin/
-  else
-    exit 1
-  fi
+  wget https://get.helm.sh/helm-v3.12.3-linux-amd64.tar.gz -O - | tar xzf - && cp linux-amd64/helm /usr/local/bin/
 fi
 
 ################################################################################
@@ -63,8 +55,6 @@ ethtool 1%3a6.1-1 amd64
 socat 1.7.4.4-2 amd64
 # conntrack (replace colon with %3a in filename)
 conntrack 1%3a1.4.7-1+b2 amd64
-libnetfilter-conntrack3:amd64 1.0.9-3 amd64
-libnfnetlink0:amd64 1.0.2-2 amd64
 # cri-tools
 cri-tools 1.26.0-00 amd64
 # kubernetes
