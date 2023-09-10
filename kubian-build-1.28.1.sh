@@ -19,12 +19,13 @@ if [[ $? != 0 ]] ; then
   fi
 fi
 
-# check for nerdctl
+# check for nerdctl full (with containerd)
 nerdctl version 2>&1 > /dev/null
 if [[ $? != 0 ]] ; then
   read -p "nerdctl is missing, do you want to install it (y/n)? " ANSWER
   if [[ "$ANSWER" = "y" ]] ; then
-    wget https://github.com/containerd/nerdctl/releases/download/v1.5.0/nerdctl-full-1.5.0-linux-amd64.tar.gz -O - | tar xzf - -C /usr/local 
+    wget https://github.com/containerd/nerdctl/releases/download/v1.5.0/nerdctl-full-1.5.0-linux-amd64.tar.gz -O - | tar xzf - -C /usr/local
+    systemctl enable containerd --now
   else
     exit 1
   fi
@@ -35,7 +36,7 @@ helm version 2>&1 > /dev/null
 if [[ $? != 0 ]] ; then
   read -p "helm is missing, do you want to install it (y/n)? " ANSWER
   if [[ "$ANSWER" = "y" ]] ; then
-    wget https://get.helm.sh/helm-v3.12.3-linux-amd64.tar.gz -O - | tar xzf - && cp linux-amd64/helm /usr/local/bin/  
+    wget https://get.helm.sh/helm-v3.12.3-linux-amd64.tar.gz -O - | tar xzf - && cp linux-amd64/helm /usr/local/bin/
   else
     exit 1
   fi
@@ -144,10 +145,6 @@ EOL_IMAGES
 SKIP_IMAGES=0
 PULL=true
 CONTAINER_IMAGES=""
-
-# check for ctr
-ctr version
-[[ $? != 0 ]] && echo "can't find ctr" && exit 1
 
 for IMAGE in "${IMAGES[@]}" ; do
   # don't process commented out images
