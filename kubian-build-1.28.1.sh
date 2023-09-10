@@ -27,7 +27,7 @@ apt install -y cri-tools containerd
 containerd config default | tee /etc/containerd/config.toml
 
 # fix config pause container use same version as kubernetes
-sed -i 's/pause:3.8/pause:3.9/' /etc/containerd/config.toml
+sed -i 's/pause:3.?/pause:3.9/' /etc/containerd/config.toml
 
 # fix systemd cgroup true
 sed -i 's/systemd_cgroup = false/systemd_cgroup = true/' /etc/containerd/config.toml
@@ -432,7 +432,7 @@ dpkg --install \$PACKAGES
 containerd config default | tee /etc/containerd/config.toml
 
 # fix config pause container use same version as kubernetes
-sed -i 's/pause:3.8/pause:3.9/' /etc/containerd/config.toml
+sed -i 's/pause:3.?/pause:3.9/' /etc/containerd/config.toml
 
 # fix systemd cgroup true
 sed -i 's/systemd_cgroup = false/systemd_cgroup = true/' /etc/containerd/config.toml
