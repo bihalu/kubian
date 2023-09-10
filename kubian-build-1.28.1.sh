@@ -2,8 +2,8 @@
 
 NAME="kubian-setup"
 VERSION="1.28.1"
-POD_NETWORK_CIDR="10.244.0.0/16"
-SVC_NETWORK_CIDR="10.96.0.0/12"
+POD_NETWORK_CIDR="10.79.0.0/16"
+SVC_NETWORK_CIDR="10.80.0.0/12"
 EMAIL="john.doe@inter.net"
 BUILD_START=$(date +%s)
 INSTALLED_PACKAGES=$(dpkg -l | sed '/^ii/!d' | tr -s ' ' | cut -d ' ' -f 2,3,4)
@@ -438,7 +438,7 @@ if [ \$INIT = true ] ; then
 
   ################################################################################
   # init cluster
-  MY_IP_ADDRESS=\$(ip -brief address show eth0 | awk '{print \$3}' | awk -F/ '{print \$1}')
+  IP_ADDRESS=\$(ip -brief address show eth0 | awk '{print \$3}' | awk -F/ '{print \$1}')
   kubeadm init \
     --v=5 \
     --upload-certs \
@@ -446,8 +446,8 @@ if [ \$INIT = true ] ; then
     --pod-network-cidr=$POD_NETWORK_CIDR \
     --service-cidr=$SVC_NETWORK_CIDR \
     --kubernetes-version=$VERSION \
-    --control-plane-endpoint=\$MY_IP_ADDRESS \
-    --apiserver-advertise-address=\$MY_IP_ADDRESS
+    --control-plane-endpoint=\$IP_ADDRESS:6443 \
+    --apiserver-advertise-address=\$IP_ADDRESS
   [ \$? != 0 ] && echo "error: can't initialize cluster" && exit 1
 
   ################################################################################
