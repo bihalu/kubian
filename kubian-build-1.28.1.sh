@@ -242,13 +242,6 @@ done
 # additional artefacts
 mkdir -p artefact
 
-# download kubeadm, kubectl and kubelet v1.28.1 -> https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.28.md#client-binaries
-# if [[ -f artefact/kubernetes-node-linux-amd64.tar.gz ]] ; then
-#   echo "file exists artefact/kubernetes-node-linux-amd64.tar.gz" 
-# else
-#   wget https://dl.k8s.io/v1.28.1/kubernetes-node-linux-amd64.tar.gz -P artefact
-# fi
-
 # download nerdctl-full v1.5.0 -> https://github.com/containerd/nerdctl/releases/tag/v1.5.0
 if [[ -f artefact/nerdctl-full-1.5.0-linux-amd64.tar.gz ]] ; then
   echo "file exists artefact/nerdctl-full-1.5.0-linux-amd64.tar.gz" 
@@ -407,12 +400,8 @@ dpkg --install \$PACKAGES
 tar Cxzvf /usr/local artefact/nerdctl-full-1.5.0-linux-amd64.tar.gz
 
 ################################################################################
-# install kubeadm, kubectl and kubelet
-#tar Cxzvf /tmp artefact/kubernetes-node-linux-amd64.tar.gz && mv /tmp/kubernetes/node/bin/* /usr/local/bin/
-
-################################################################################
 # install helm
-tar Cxzvf /tmp artefact/helm-v3.12.3-linux-amd64.tar.gz && cp /tmp/kubernetes/node/bin/* /usr/local/bin/
+tar Cxzvf /tmp artefact/helm-v3.12.3-linux-amd64.tar.gz && cp /tmp/linux-amd64/helm /usr/local/bin/
 
 ################################################################################
 # install calico cni-plugins
