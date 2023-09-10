@@ -11,7 +11,7 @@ INSTALLED_PACKAGES=$(dpkg -l | sed '/^ii/!d' | tr -s ' ' | cut -d ' ' -f 2,3,4)
 # check for aptitude
 aptitude --version 2>&1 > /dev/null
 if [[ $? != 0 ]] ; then
-  read -p "aptitude is missing, do you want to install it (y/n)?" ANSWER
+  read -p "aptitude is missing, do you want to install it (y/n)? " ANSWER
   if [[ "$ANSWER" = "y" ]] ; then
     apt install -y aptitude
   else
@@ -22,10 +22,9 @@ fi
 # check for nerdctl
 nerdctl version 2>&1 > /dev/null
 if [[ $? != 0 ]] ; then
-  read -p "nerdctl is missing, do you want to install it (y/n)?" ANSWER
+  read -p "nerdctl is missing, do you want to install it (y/n)? " ANSWER
   if [[ "$ANSWER" = "y" ]] ; then
-    wget https://github.com/containerd/nerdctl/releases/download/v1.5.0/nerdctl-full-1.5.0-linux-amd64.tar.gz -O - | \
-    tar Cxzvvf /usr/local artefact/nerdctl-full-1.5.0-linux-amd64.tar.gz
+    wget https://github.com/containerd/nerdctl/releases/download/v1.5.0/nerdctl-full-1.5.0-linux-amd64.tar.gz -O - | tar xzf - -C /usr/local 
   else
     exit 1
   fi
@@ -34,10 +33,9 @@ fi
 # check for helm
 helm version 2>&1 > /dev/null
 if [[ $? != 0 ]] ; then
-  read -p "helm is missing, do you want to install it (y/n)?" ANSWER
+  read -p "helm is missing, do you want to install it (y/n)? " ANSWER
   if [[ "$ANSWER" = "y" ]] ; then
-    wget https://get.helm.sh/helm-v3.12.3-linux-amd64.tar.gz -O - | \
-    tar Cxzvvf /tmp artefact/helm-v3.12.3-linux-amd64.tar.gz && cp /tmp/linux-amd64/helm /usr/local/bin/  
+    wget https://get.helm.sh/helm-v3.12.3-linux-amd64.tar.gz -O - | tar xzf - && cp linux-amd64/helm /usr/local/bin/  
   else
     exit 1
   fi
@@ -248,7 +246,6 @@ if [[ -f artefact/nerdctl-full-1.5.0-linux-amd64.tar.gz ]] ; then
   echo "file exists artefact/nerdctl-full-1.5.0-linux-amd64.tar.gz" 
 else
   wget https://github.com/containerd/nerdctl/releases/download/v1.5.0/nerdctl-full-1.5.0-linux-amd64.tar.gz -P artefact
-  tar Cxzvvf /usr/local artefact/nerdctl-full-1.5.0-linux-amd64.tar.gz
 fi
  
 # download helm v3.12.3 -> https://github.com/helm/helm/releases/tag/v3.12.3
@@ -256,7 +253,6 @@ if [[ -f artefact/helm-v3.12.3-linux-amd64.tar.gz ]] ; then
   echo "file exists artefact/helm-v3.12.3-linux-amd64.tar.gz" 
 else
   wget https://get.helm.sh/helm-v3.12.3-linux-amd64.tar.gz -P artefact
-  tar Cxzvvf /tmp artefact/helm-v3.12.3-linux-amd64.tar.gz && cp /tmp/linux-amd64/helm /usr/local/bin/
 fi
 
 # download calico cni-plugin v3.20.6 -> calico
