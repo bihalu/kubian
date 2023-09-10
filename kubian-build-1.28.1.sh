@@ -31,26 +31,24 @@ wget https://download.docker.com/linux/debian/gpg -O - | gpg --batch --yes --dea
 
 apt update
 
-# apt install -y cri-tools containerd
+apt install -y containerd
 
-# # configure containerd
-# containerd config default | tee /etc/containerd/config.toml
+# configure containerd
+containerd config default | tee /etc/containerd/config.toml
 
-# # fix config pause container use same version as kubernetes
-# sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml
+# fix config pause container use same version as kubernetes
+sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml
 
-# # fix systemd cgroup true
-# sed -i 's/systemd_cgroup = false/systemd_cgroup = true/' /etc/containerd/config.toml
+# fix systemd cgroup true
+sed -i 's/systemd_cgroup = false/systemd_cgroup = true/' /etc/containerd/config.toml
 
-# systemctl restart containerd
+systemctl restart containerd
 
 # install helm
 helm version 2>&1 > /dev/null
 if [[ $? != 0 ]] ; then
   wget https://get.helm.sh/helm-v3.12.3-linux-amd64.tar.gz -O - | tar Cxzf /tmp - && cp /tmp/linux-amd64/helm /usr/local/bin/
 fi
-
-exit 1
 
 ################################################################################
 # deb packages for airgap installation -> https://packages.debian.org
@@ -82,15 +80,17 @@ kubeadm 1.28.1-00 amd64
 kubectl 1.28.1-00 amd64
 kubelet 1.28.1-00 amd64
 kubernetes-cni 1.2.0-00 amd64
+# containerd.io
+containerd.io 1.6.22-1 amd64
 # containerd
-containerd 1.6.20~ds1-1+b1 amd64
-criu 3.17.1-2 amd64
-libnet1:amd64 1.1.6+dfsg-3.2 amd64
-libnl-3-200:amd64 3.7.0-0.2+b1 amd64
-libprotobuf32:amd64 3.21.12-3 amd64
-python3-protobuf 3.21.12-3 amd64
-runc 1.1.5+ds1-1+b1 amd64
-sgml-base 1.31 all
+# containerd 1.6.20~ds1-1+b1 amd64
+# criu 3.17.1-2 amd64
+# libnet1:amd64 1.1.6+dfsg-3.2 amd64
+# libnl-3-200:amd64 3.7.0-0.2+b1 amd64
+# libprotobuf32:amd64 3.21.12-3 amd64
+# python3-protobuf 3.21.12-3 amd64
+# runc 1.1.5+ds1-1+b1 amd64
+# sgml-base 1.31 all
 EOL_PACKAGES
 
 mkdir -p deb/
