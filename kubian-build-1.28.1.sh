@@ -8,6 +8,41 @@ EMAIL="john.doe@inter.net"
 BUILD_START=$(date +%s)
 INSTALLED_PACKAGES=$(dpkg -l | sed '/^ii/!d' | tr -s ' ' | cut -d ' ' -f 2,3,4)
 
+# check for aptitude
+aptitude --version 2>&1 > /dev/null
+if [[ $? != 0 ]] ; then
+  read -p "aptitude is missing, do you want to install it (y/n)?" ANSWER
+  if [[ "$ANSWER" = "y" ]] ; then
+    apt install -y aptitude
+  else
+    exit 1
+  fi
+fi
+
+# check for nerdctl
+nerdctl version 2>&1 > /dev/null
+if [[ $? != 0 ]] ; then
+  read -p "nerdctl is missing, do you want to install it (y/n)?" ANSWER
+  if [[ "$ANSWER" = "y" ]] ; then
+    wget https://github.com/containerd/nerdctl/releases/download/v1.5.0/nerdctl-full-1.5.0-linux-amd64.tar.gz -O - | \
+    tar Cxzvvf /usr/local artefact/nerdctl-full-1.5.0-linux-amd64.tar.gz
+  else
+    exit 1
+  fi
+fi
+
+# check for helm
+helm version 2>&1 > /dev/null
+if [[ $? != 0 ]] ; then
+  read -p "helm is missing, do you want to install it (y/n)?" ANSWER
+  if [[ "$ANSWER" = "y" ]] ; then
+    wget https://get.helm.sh/helm-v3.12.3-linux-amd64.tar.gz -O - | \
+    tar Cxzvvf /tmp artefact/helm-v3.12.3-linux-amd64.tar.gz && cp /tmp/linux-amd64/helm /usr/local/bin/  
+  else
+    exit 1
+  fi
+fi
+
 ################################################################################
 # deb packages for airgap installation -> https://packages.debian.org
 readarray -t PACKAGES <<EOL_PACKAGES
@@ -26,10 +61,6 @@ libcurl4:amd64 7.88.1-10+deb12u1 amd64
 EOL_PACKAGES
 
 mkdir -p deb/
-
-# check for aptitude
-aptitude --version
-[[ $? != 0 ]] && echo "can't find aptitude" && exit 1
 
 aptitude clean
 
@@ -143,10 +174,6 @@ done
 SAVE=true
 
 if [[ ${SAVE} = true ]] ; then
-  # check for nerdctl
-  nerdctl version
-  [[ $? != 0 ]] && echo "can't find nerdctl" && exit 1
-
   # save images as tar file
   mkdir -p container
 
@@ -171,10 +198,6 @@ EOL_HELM_CHARTS
 SKIP_CHARTS=0
 
 mkdir -p helm/
-
-# check for helm
-helm version
-[[ $? != 0 ]] && echo "can't find helm" && exit 1
 
 for CHART in "${HELM_CHARTS[@]}" ; do
   # don't process commented out helm charts
@@ -214,27 +237,26 @@ done
 mkdir -p artefact
 
 # download kubeadm, kubectl and kubelet v1.28.1 -> https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.28.md#client-binaries
-KUBERNETES="kubernetes-node-linux-amd64.tar.gz"
-if [[ -f artefact/${KUBERNETES} ]] ; then
-  echo "file exists artefact/${KUBERNETES}" 
+if [[ -f artefact/kubernetes-node-linux-amd64.tar.gz ]] ; then
+  echo "file exists artefact/kubernetes-node-linux-amd64.tar.gz" 
 else
-  wget https://dl.k8s.io/v1.28.1/${KUBERNETES} -P artefact
+  wget https://dl.k8s.io/v1.28.1/kubernetes-node-linux-amd64.tar.gz -P artefact
 fi
 
 # download nerdctl-full v1.5.0 -> https://github.com/containerd/nerdctl/releases/tag/v1.5.0
-NERDCTL="nerdctl-full-1.5.0-linux-amd64.tar.gz"
-if [[ -f artefact/${NERDCTL} ]] ; then
-  echo "file exists artefact/${NERDCTL}" 
+if [[ -f artefact/nerdctl-full-1.5.0-linux-amd64.tar.gz ]] ; then
+  echo "file exists artefact/nerdctl-full-1.5.0-linux-amd64.tar.gz" 
 else
-  wget https://github.com/containerd/nerdctl/releases/download/v1.5.0/${NERDCTL} -P artefact
+  wget https://github.com/containerd/nerdctl/releases/download/v1.5.0/nerdctl-full-1.5.0-linux-amd64.tar.gz -P artefact
+  tar Cxzvvf /usr/local artefact/nerdctl-full-1.5.0-linux-amd64.tar.gz
 fi
  
 # download helm v3.12.3 -> https://github.com/helm/helm/releases/tag/v3.12.3
-HELM="helm-v3.12.3-linux-amd64.tar.gz"
-if [[ -f artefact/${HELM} ]] ; then
-  echo "file exists artefact/${HELM}" 
+if [[ -f artefact/helm-v3.12.3-linux-amd64.tar.gz ]] ; then
+  echo "file exists artefact/helm-v3.12.3-linux-amd64.tar.gz" 
 else
-  wget https://get.helm.sh/${HELM} -P artefact
+  wget https://get.helm.sh/helm-v3.12.3-linux-amd64.tar.gz -P artefact
+  tar Cxzvvf /tmp artefact/helm-v3.12.3-linux-amd64.tar.gz && cp /tmp/linux-amd64/helm /usr/local/bin/
 fi
 
 # download calico cni-plugin v3.20.6 -> calico
@@ -381,13 +403,17 @@ tar Cxzvvf /usr/local artefact/nerdctl-full-1.5.0-linux-amd64.tar.gz
 tar Cxzvvf /tmp artefact/kubernetes-node-linux-amd64.tar.gz && mv /tmp/kubernetes/node/bin/* /usr/local/bin/
 
 ################################################################################
+# install helm
+tar Cxzvvf /tmp artefact/helm-v3.12.3-linux-amd64.tar.gz && cp /tmp/kubernetes/node/bin/* /usr/local/bin/
+
+################################################################################
 # install calico cni-plugins
 cp artefact/calico /usr/local/libexec/cni/ && chmod 755 /usr/local/libexec/cni/calico
 cp artefact/calico-ipam /usr/local/libexec/cni/ && chmod 755 /usr/local/libexec/cni/calico-ipam
 
 ################################################################################
 # enable services and start container runtime
-systemctl enable kubelet
+#systemctl enable kubelet
 systemctl enable containerd --now
 
 # fix pause container use same version as kubernetes
