@@ -258,6 +258,13 @@ else
   wget https://get.helm.sh/helm-v3.12.3-linux-amd64.tar.gz -P artefact
 fi
 
+# download k9s v0.27.4 -> https://github.com/derailed/k9s/releases/tag/v0.27.4
+if [[ -f artefact/k9s_Linux_amd64.tar.gz ]] ; then
+  echo "file exists artefact/k9s_Linux_amd64.tar.gz" 
+else
+  wget https://github.com/derailed/k9s/releases/download/v0.27.4/k9s_Linux_amd64.tar.gz -P artefact
+fi
+
 # download calico cni-plugin v3.20.6 -> calico
 if [[ -f artefact/calico ]] ; then
   echo "file exists artefact/calico" 
@@ -404,6 +411,10 @@ tar Cxzvf /usr/local artefact/nerdctl-full-1.5.0-linux-amd64.tar.gz
 ################################################################################
 # install helm
 tar Cxzvf /tmp artefact/helm-v3.12.3-linux-amd64.tar.gz && cp /tmp/linux-amd64/helm /usr/local/bin/
+
+################################################################################
+# install k9s
+tar Cxzvf /tmp artefact/k9s_Linux_amd64.tar.gz && cp /tmp/k9s /usr/local/bin/
 
 ################################################################################
 # install calico cni-plugins
