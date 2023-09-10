@@ -17,7 +17,7 @@ deb http://apt.kubernetes.io/ kubernetes-xenial main
 # deb-src http://apt.kubernetes.io/ kubernetes-xenial main
 KUBERNETES_REPO_EOF
 
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmour -o /etc/apt/trusted.gpg.d/cgoogle.gpg
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --batch --yes --dearmour --output /etc/apt/trusted.gpg.d/cgoogle.gpg
 
 # install nerdctl full (with containerd)
 nerdctl version 2>&1 > /dev/null
@@ -449,7 +449,6 @@ if [ \$INIT = true ] ; then
     --kubernetes-version=$VERSION \
     --control-plane-endpoint=\$CONTROL_PLANE_ENDPOINT
   [ \$? != 0 ] && echo "error: can't initialize cluster" && exit 1
-
 
   ################################################################################
   # copy kube config
