@@ -419,8 +419,10 @@ tar Cxzvf /tmp artefact/k9s_Linux_amd64.tar.gz && cp /tmp/k9s /usr/local/bin/
 
 ################################################################################
 # install calico cni-plugins
-cp artefact/calico /usr/local/libexec/cni/ && chmod 755 /usr/local/libexec/cni/calico
-cp artefact/calico-ipam /usr/local/libexec/cni/ && chmod 755 /usr/local/libexec/cni/calico-ipam
+#cp artefact/calico /usr/local/libexec/cni/ && chmod 755 /usr/local/libexec/cni/calico
+#cp artefact/calico-ipam /usr/local/libexec/cni/ && chmod 755 /usr/local/libexec/cni/calico-ipam
+cp artefact/calico /opt/cni/bin/ && chmod 755 /opt/cni/bin/calico
+cp artefact/calico-ipam /opt/cni/bin/ && chmod 755 /opt/cni/bin/calico-ipam
 
 ################################################################################
 # enable kubelet services
