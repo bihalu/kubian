@@ -21,24 +21,36 @@ wget https://packages.cloud.google.com/apt/doc/apt-key.gpg -O - | gpg --batch --
 
 apt update
 
-apt install -y cri-tools containerd
+# add docker repository and import docker gpg key
+tee /etc/apt/sources.list.d/docker.list <<DOCKER_REPO_EOF
+deb [arch=amd64] https://download.docker.com/linux/debian bookworm stable
+# deb-src [arch=amd64] https://download.docker.com/linux/debian bookworm stable
+DOCKER_REPO_EOF
 
-# configure containerd
-containerd config default | tee /etc/containerd/config.toml
+wget https://download.docker.com/linux/debian/gpg -O - | gpg --batch --yes --dearmor --output /etc/apt/trusted.gpg.d/docker.gpg
 
-# fix config pause container use same version as kubernetes
-sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml
+apt update
 
-# fix systemd cgroup true
-sed -i 's/systemd_cgroup = false/systemd_cgroup = true/' /etc/containerd/config.toml
+# apt install -y cri-tools containerd
 
-systemctl restart containerd
+# # configure containerd
+# containerd config default | tee /etc/containerd/config.toml
+
+# # fix config pause container use same version as kubernetes
+# sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml
+
+# # fix systemd cgroup true
+# sed -i 's/systemd_cgroup = false/systemd_cgroup = true/' /etc/containerd/config.toml
+
+# systemctl restart containerd
 
 # install helm
 helm version 2>&1 > /dev/null
 if [[ $? != 0 ]] ; then
   wget https://get.helm.sh/helm-v3.12.3-linux-amd64.tar.gz -O - | tar Cxzf /tmp - && cp /tmp/linux-amd64/helm /usr/local/bin/
 fi
+
+exit 1
 
 ################################################################################
 # deb packages for airgap installation -> https://packages.debian.org
