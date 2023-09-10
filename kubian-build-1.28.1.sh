@@ -197,7 +197,7 @@ if [[ ${SAVE} = true ]] ; then
 
   # export all container images to images.tar 
   echo "Be patient exporting container images ..."
-  ctr --namespace k8s.io images export container/images.tar ${CONTAINER_IMAGES}
+  ctr images export container/images.tar ${CONTAINER_IMAGES}
 fi
 
 ################################################################################
