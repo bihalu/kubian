@@ -23,8 +23,15 @@ apt update
 
 apt install -y cri-tools containerd
 
-# fix pause container use same version as kubernetes
+# configure containerd
+containerd config default | tee /etc/containerd/config.toml
+
+# fix config pause container use same version as kubernetes
 sed -i 's/pause:3.8/pause:3.9/' /etc/containerd/config.toml
+
+# fix systemd cgroup true
+sed -i 's/systemd_cgroup = false/systemd_cgroup = true/' /etc/containerd/config.toml
+
 systemctl restart containerd
 
 # install helm
@@ -335,6 +342,22 @@ prometheus:
               storage: 10Gi
 EOF_PROM_VALUES
 
+# kubeadm_config.yaml
+tee artefact/kubeadm_config.yaml <<EOF_KUBEADM_CONFIG
+kind: KubeletConfiguration
+apiVersion: kubelet.config.k8s.io/v1beta1
+cgroupDriver: systemd
+---
+kind: ClusterConfiguration
+apiVersion: kubeadm.k8s.io/v1beta3
+clusterName: kubian
+kubernetesVersion: $VERSION
+networking:
+  serviceSubnet: $SVC_NETWORK_CIDR
+  podSubnet: $POD_NETWORK_CIDR
+# controlPlaneEndpoint:
+EOF_KUBEADM_CONFIG
+
 ################################################################################
 # create setup.sh
 tee setup.sh <<EOF_SETUP
@@ -405,8 +428,15 @@ PACKAGES=\$(find deb -name "*.deb")
 dpkg --install \$PACKAGES
 
 ################################################################################
-# fix containerd pause container use same version as kubernetes
+# containerd config
+containerd config default | tee /etc/containerd/config.toml
+
+# fix config pause container use same version as kubernetes
 sed -i 's/pause:3.8/pause:3.9/' /etc/containerd/config.toml
+
+# fix systemd cgroup true
+sed -i 's/systemd_cgroup = false/systemd_cgroup = true/' /etc/containerd/config.toml
+
 systemctl restart containerd
 
 ################################################################################
@@ -441,15 +471,19 @@ if [ \$INIT = true ] ; then
   ################################################################################
   # init cluster
   IP_ADDRESS=\$(ip -brief address show eth0 | awk '{print \$3}' | awk -F/ '{print \$1}')
-  kubeadm init \
-    --v=5 \
-    --upload-certs \
-    --node-name=\$HOSTNAME \
-    --pod-network-cidr=$POD_NETWORK_CIDR \
-    --service-cidr=$SVC_NETWORK_CIDR \
-    --kubernetes-version=$VERSION \
-    --control-plane-endpoint=\$IP_ADDRESS:6443 \
-    --apiserver-advertise-address=\$IP_ADDRESS
+  echo "controlPlaneEndpoint: \$IP_ADDRESS" >> artefact/kubeadm_config.yaml
+
+  kubeadm init --v=5 --upload-certs --node-name=\$HOSTNAME --config artefact/kubeadm_config.yaml
+
+  # kubeadm init \
+  #   --v=5 \
+  #   --upload-certs \
+  #   --node-name=\$HOSTNAME \
+  #   --pod-network-cidr=$POD_NETWORK_CIDR \
+  #   --service-cidr=$SVC_NETWORK_CIDR \
+  #   --kubernetes-version=$VERSION \
+  #   --control-plane-endpoint=\$IP_ADDRESS:6443 \
+  #   --apiserver-advertise-address=\$IP_ADDRESS
   [ \$? != 0 ] && echo "error: can't initialize cluster" && exit 1
 
   ################################################################################
