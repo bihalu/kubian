@@ -25,6 +25,14 @@ apt update
 nerdctl version 2>&1 > /dev/null
 if [[ $? != 0 ]] ; then
   wget https://github.com/containerd/nerdctl/releases/download/v1.5.0/nerdctl-full-1.5.0-linux-amd64.tar.gz -O - | tar xzf - -C /usr/local
+
+  # configure containerd 
+  mkdir -p /etc/containerd
+  containerd config default | tee /etc/containerd/config.toml
+
+  # fix pause container use same version as kubernetes
+  sed -i 's/pause:3.8/pause:3.9/' /etc/containerd/config.toml
+
   systemctl enable containerd --now
 fi
 
