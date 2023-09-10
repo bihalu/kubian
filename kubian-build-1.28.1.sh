@@ -8,8 +8,8 @@ EMAIL="john.doe@inter.net"
 BUILD_START=$(date +%s)
 INSTALLED_PACKAGES=$(dpkg -l | sed '/^ii/!d' | tr -s ' ' | cut -d ' ' -f 2,3,4)
 
-# install aptitude apt-transport-https curl gpg
-apt install -y aptitude apt-transport-https curl gpg
+# install aptitude apt-transport-https gpg
+apt install -y aptitude apt-transport-https gpg
 
 # add kubernetes repository and import google gpg key
 tee /etc/apt/sources.list.d/kubernetes.list <<KUBERNETES_REPO_EOF
@@ -17,24 +17,15 @@ deb http://apt.kubernetes.io/ kubernetes-xenial main
 # deb-src http://apt.kubernetes.io/ kubernetes-xenial main
 KUBERNETES_REPO_EOF
 
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --batch --yes --dearmour --output /etc/apt/trusted.gpg.d/cgoogle.gpg
+wget https://packages.cloud.google.com/apt/doc/apt-key.gpg -O - | gpg --batch --yes --dearmour --output /etc/apt/trusted.gpg.d/cgoogle.gpg
 
 apt update
 
-# install nerdctl full (with containerd)
-nerdctl version 2>&1 > /dev/null
-if [[ $? != 0 ]] ; then
-  wget https://github.com/containerd/nerdctl/releases/download/v1.5.0/nerdctl-full-1.5.0-linux-amd64.tar.gz -O - | tar xzf - -C /usr/local
+apt install -y cri-tools containerd
 
-  # configure containerd 
-  mkdir -p /etc/containerd
-  containerd config default | tee /etc/containerd/config.toml
-
-  # fix pause container use same version as kubernetes
-  sed -i 's/pause:3.8/pause:3.9/' /etc/containerd/config.toml
-
-  systemctl enable containerd --now
-fi
+# fix pause container use same version as kubernetes
+sed -i 's/pause:3.8/pause:3.9/' /etc/containerd/config.toml
+systemctl restart containerd
 
 # install helm
 helm version 2>&1 > /dev/null
@@ -72,6 +63,15 @@ kubeadm 1.28.1-00 amd64
 kubectl 1.28.1-00 amd64
 kubelet 1.28.1-00 amd64
 kubernetes-cni 1.2.0-00 amd64
+# containerd
+containerd 1.6.20~ds1-1+b1 amd64
+criu 3.17.1-2 amd64
+libnet1:amd64 1.1.6+dfsg-3.2 amd64
+libnl-3-200:amd64 3.7.0-0.2+b1 amd64
+libprotobuf32:amd64 3.21.12-3 amd64
+python3-protobuf 3.21.12-3 amd64
+runc 1.1.5+ds1-1+b1 amd64
+sgml-base 1.31 all
 EOL_PACKAGES
 
 mkdir -p deb/
@@ -178,9 +178,8 @@ for IMAGE in "${IMAGES[@]}" ; do
   if [[ ${PULL} = true ]] ; then
     ctr image pull ${IMAGE}
 
-    # exit on install error
-    [[ $? != 0 ]] && echo "can't pull image with nerdctl" && exit 1
-
+    # exit on pull error
+    [[ $? != 0 ]] && echo "can't pull image" && exit 1
   fi
 
   CONTAINER_IMAGES+=" "
@@ -190,15 +189,15 @@ done
 SAVE=true
 
 if [[ ${SAVE} = true ]] ; then
-  # save images as tar file
+  # export images as tar file
   mkdir -p container
 
   # cleanup container images tar file
   [[ -f container/images.tar ]] && rm -f container/images.tar
 
-  # save all images in container images tar file
-  echo "Be patient saving container images ..."
-  nerdctl save --output container/images.tar ${CONTAINER_IMAGES}
+  # export all container images to images.tar 
+  echo "Be patient exporting container images ..."
+  ctr --namespace k8s.io images export container/images.tar ${CONTAINER_IMAGES}
 fi
 
 ################################################################################
@@ -252,13 +251,6 @@ done
 # additional artefacts
 mkdir -p artefact
 
-# download nerdctl-full v1.5.0 -> https://github.com/containerd/nerdctl/releases/tag/v1.5.0
-if [[ -f artefact/nerdctl-full-1.5.0-linux-amd64.tar.gz ]] ; then
-  echo "file exists artefact/nerdctl-full-1.5.0-linux-amd64.tar.gz" 
-else
-  wget https://github.com/containerd/nerdctl/releases/download/v1.5.0/nerdctl-full-1.5.0-linux-amd64.tar.gz -P artefact
-fi
- 
 # download helm v3.12.3 -> https://github.com/helm/helm/releases/tag/v3.12.3
 if [[ -f artefact/helm-v3.12.3-linux-amd64.tar.gz ]] ; then
   echo "file exists artefact/helm-v3.12.3-linux-amd64.tar.gz" 
@@ -413,15 +405,9 @@ PACKAGES=\$(find deb -name "*.deb")
 dpkg --install \$PACKAGES
 
 ################################################################################
-# install nerdctl and containerd
-tar Cxzvf /usr/local artefact/nerdctl-full-1.5.0-linux-amd64.tar.gz
-
-# configure containerd 
-mkdir -p /etc/containerd
-containerd config default | tee /etc/containerd/config.toml
-
-# fix pause container use same version as kubernetes
+# fix containerd pause container use same version as kubernetes
 sed -i 's/pause:3.8/pause:3.9/' /etc/containerd/config.toml
+systemctl restart containerd
 
 ################################################################################
 # install helm
@@ -437,14 +423,13 @@ cp artefact/calico /usr/local/libexec/cni/ && chmod 755 /usr/local/libexec/cni/c
 cp artefact/calico-ipam /usr/local/libexec/cni/ && chmod 755 /usr/local/libexec/cni/calico-ipam
 
 ################################################################################
-# enable services and start container runtime
+# enable kubelet services
 systemctl enable kubelet
-systemctl enable containerd --now
 
 ################################################################################
 # import container images
 echo "Be patient import container images ..."
-nerdctl load --namespace k8s.io --input container/images.tar
+ctr --namespace k8s.io image import container/images.tar
 
 ################################################################################
 # init
