@@ -4,13 +4,16 @@ NAME="kubian-setup"
 VERSION="1.28.1"
 POD_NETWORK_CIDR="10.79.0.0/16"
 SVC_NETWORK_CIDR="10.80.0.0/12"
+CLUSTER_NAME="kubian"
 EMAIL="john.doe@inter.net"
 BUILD_START=$(date +%s)
 INSTALLED_PACKAGES=$(dpkg -l | sed '/^ii/!d' | tr -s ' ' | cut -d ' ' -f 2,3,4)
 
+################################################################################
 # install aptitude apt-transport-https gpg
-apt install -y aptitude apt-transport-https gpg
+apt install -y aptitude apt-transport-https gpg containerd
 
+################################################################################
 # add kubernetes repository and import google gpg key
 tee /etc/apt/sources.list.d/kubernetes.list <<KUBERNETES_REPO_EOF
 deb http://apt.kubernetes.io/ kubernetes-xenial main
@@ -21,16 +24,8 @@ wget https://packages.cloud.google.com/apt/doc/apt-key.gpg -O - | gpg --batch --
 
 apt update
 
-# add docker repository and import docker gpg key
-tee /etc/apt/sources.list.d/docker.list <<DOCKER_REPO_EOF
-deb [arch=amd64] https://download.docker.com/linux/debian bookworm stable
-# deb-src [arch=amd64] https://download.docker.com/linux/debian bookworm stable
-DOCKER_REPO_EOF
-
-wget https://download.docker.com/linux/debian/gpg -O - | gpg --batch --yes --dearmor --output /etc/apt/trusted.gpg.d/docker.gpg
-
-apt update
-
+################################################################################
+# install containerd
 apt install -y containerd
 
 # configure containerd
@@ -39,11 +34,12 @@ containerd config default | tee /etc/containerd/config.toml
 # fix config pause container use same version as kubernetes
 sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml
 
-# fix systemd cgroup true
-sed -i 's/systemd_cgroup = false/systemd_cgroup = true/' /etc/containerd/config.toml
+# fix systemd cgroup (use cgroup v1)
+sed -i 's/systemd_cgroup = true/systemd_cgroup = false/' /etc/containerd/config.toml
 
 systemctl restart containerd
 
+################################################################################
 # install helm
 helm version 2>&1 > /dev/null
 if [[ $? != 0 ]] ; then
@@ -80,17 +76,15 @@ kubeadm 1.28.1-00 amd64
 kubectl 1.28.1-00 amd64
 kubelet 1.28.1-00 amd64
 kubernetes-cni 1.2.0-00 amd64
-# containerd.io
-containerd.io 1.6.22-1 amd64
 # containerd
-# containerd 1.6.20~ds1-1+b1 amd64
-# criu 3.17.1-2 amd64
-# libnet1:amd64 1.1.6+dfsg-3.2 amd64
-# libnl-3-200:amd64 3.7.0-0.2+b1 amd64
-# libprotobuf32:amd64 3.21.12-3 amd64
-# python3-protobuf 3.21.12-3 amd64
-# runc 1.1.5+ds1-1+b1 amd64
-# sgml-base 1.31 all
+containerd 1.6.20~ds1-1+b1 amd64
+criu 3.17.1-2 amd64
+libnet1:amd64 1.1.6+dfsg-3.2 amd64
+libnl-3-200:amd64 3.7.0-0.2+b1 amd64
+libprotobuf32:amd64 3.21.12-3 amd64
+python3-protobuf 3.21.12-3 amd64
+runc 1.1.5+ds1-1+b1 amd64
+sgml-base 1.31 all
 EOL_PACKAGES
 
 mkdir -p deb/
@@ -356,18 +350,14 @@ EOF_PROM_VALUES
 
 # kubeadm_config.yaml
 tee artefact/kubeadm_config.yaml <<EOF_KUBEADM_CONFIG
-kind: KubeletConfiguration
-apiVersion: kubelet.config.k8s.io/v1beta1
-cgroupDriver: systemd
----
 kind: ClusterConfiguration
 apiVersion: kubeadm.k8s.io/v1beta3
-clusterName: kubian
+clusterName: $CLUSTER_NAME
 kubernetesVersion: $VERSION
 networking:
   serviceSubnet: $SVC_NETWORK_CIDR
   podSubnet: $POD_NETWORK_CIDR
-# controlPlaneEndpoint:
+  #controlPlaneEndpoint: <is set during initialization>
 EOF_KUBEADM_CONFIG
 
 ################################################################################
@@ -446,8 +436,8 @@ containerd config default | tee /etc/containerd/config.toml
 # fix config pause container use same version as kubernetes
 sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml
 
-# fix systemd cgroup true
-sed -i 's/systemd_cgroup = false/systemd_cgroup = true/' /etc/containerd/config.toml
+# fix systemd cgroup (use cgroup v1)
+sed -i 's/systemd_cgroup = true/systemd_cgroup = false/' /etc/containerd/config.toml
 
 systemctl restart containerd
 
@@ -461,8 +451,6 @@ tar Cxzvf /tmp artefact/k9s_Linux_amd64.tar.gz && cp /tmp/k9s /usr/local/bin/
 
 ################################################################################
 # install calico cni-plugins
-#cp artefact/calico /usr/local/libexec/cni/ && chmod 755 /usr/local/libexec/cni/calico
-#cp artefact/calico-ipam /usr/local/libexec/cni/ && chmod 755 /usr/local/libexec/cni/calico-ipam
 cp artefact/calico /opt/cni/bin/ && chmod 755 /opt/cni/bin/calico
 cp artefact/calico-ipam /opt/cni/bin/ && chmod 755 /opt/cni/bin/calico-ipam
 
