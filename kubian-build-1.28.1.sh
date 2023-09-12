@@ -7,7 +7,6 @@ SVC_NETWORK_CIDR="10.80.0.0/12"
 CLUSTER_NAME="kubian"
 EMAIL="john.doe@inter.net"
 BUILD_START=$(date +%s)
-INSTALLED_PACKAGES=$(dpkg -l | sed '/^ii/!d' | tr -s ' ' | cut -d ' ' -f 2,3,4)
 
 ################################################################################
 # install aptitude apt-transport-https gpg
@@ -242,22 +241,16 @@ for CHART in "${HELM_CHARTS[@]}" ; do
   CHART_VERSION="${CHART_DATA[3]}"
 
   # continue if helmchart exists
-  [[ -f helm/${CHART_NAME}/${CHART_NAME}-${CHART_VERSION}.tgz ]] && continue
+  [[ -f helm/${CHART_NAME}-${CHART_VERSION}.tgz ]] && continue
 
   # add helm repo
   helm repo add ${CHART_REPO} ${CHART_URL} 
 
-  # create folder for helm chart
-  mkdir -p helm/${CHART_NAME}/
-
   # pull helm chart
-  helm pull ${CHART_REPO}/${CHART_NAME} --version ${CHART_VERSION}
+  helm pull ${CHART_REPO}/${CHART_NAME} --version ${CHART_VERSION} --destination helm/
 
   # exit on pull error
   [[ $? != 0 ]] && exit 1
-
-  # move helmchart to folder
-  mv ${CHART_NAME}-${CHART_VERSION}.tgz helm/${CHART_NAME}/
 done
 
 ################################################################################
@@ -348,16 +341,16 @@ prometheus:
               storage: 10Gi
 EOF_PROM_VALUES
 
-# kubeadm_config.yaml
+# kubeadm_config.yaml -> https://kubernetes.io/docs/reference/config-api/kubeadm-config.v1beta3/
 tee artefact/kubeadm_config.yaml <<EOF_KUBEADM_CONFIG
-kind: ClusterConfiguration
 apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
 clusterName: $CLUSTER_NAME
 kubernetesVersion: $VERSION
 networking:
   serviceSubnet: $SVC_NETWORK_CIDR
   podSubnet: $POD_NETWORK_CIDR
-  #controlPlaneEndpoint: <is set during initialization>
+#controlPlaneEndpoint: <is set during initialization>
 EOF_KUBEADM_CONFIG
 
 ################################################################################
@@ -399,7 +392,7 @@ WORKER=false
 
 ################################################################################
 # airgap no repos
-#echo "# airgap no repos" > /etc/apk/repositories
+echo "# airgap no repos" > /etc/apt/sources.list
 
 ################################################################################
 # add kernel module for networking stuff
@@ -422,7 +415,10 @@ sysctl --system
 ################################################################################
 # disable swap
 sed -ie '/swap/ s/^/#/' /etc/fstab
-swapoff -a
+swapoff -all
+
+# prevent swap from being re-enabled via systemd
+systemctl mask dev-sda3.swap
 
 ################################################################################
 # install packages
@@ -443,11 +439,11 @@ systemctl restart containerd
 
 ################################################################################
 # install helm
-tar Cxzvf /tmp artefact/helm-v3.12.3-linux-amd64.tar.gz && cp /tmp/linux-amd64/helm /usr/local/bin/
+tar Cxzf /tmp artefact/helm-v3.12.3-linux-amd64.tar.gz && cp /tmp/linux-amd64/helm /usr/local/bin/
 
 ################################################################################
 # install k9s
-tar Cxzvf /tmp artefact/k9s_Linux_amd64.tar.gz && cp /tmp/k9s /usr/local/bin/
+tar Cxzf /tmp artefact/k9s_Linux_amd64.tar.gz && cp /tmp/k9s /usr/local/bin/
 
 ################################################################################
 # install calico cni-plugins
@@ -473,17 +469,7 @@ if [ \$INIT = true ] ; then
   IP_ADDRESS=\$(ip -brief address show eth0 | awk '{print \$3}' | awk -F/ '{print \$1}')
   echo "controlPlaneEndpoint: \$IP_ADDRESS" >> artefact/kubeadm_config.yaml
 
-  kubeadm init --v=5 --upload-certs --node-name=\$HOSTNAME --config artefact/kubeadm_config.yaml
-
-  # kubeadm init \
-  #   --v=5 \
-  #   --upload-certs \
-  #   --node-name=\$HOSTNAME \
-  #   --pod-network-cidr=$POD_NETWORK_CIDR \
-  #   --service-cidr=$SVC_NETWORK_CIDR \
-  #   --kubernetes-version=$VERSION \
-  #   --control-plane-endpoint=\$IP_ADDRESS:6443 \
-  #   --apiserver-advertise-address=\$IP_ADDRESS
+  kubeadm init --upload-certs --node-name=\$HOSTNAME --config artefact/kubeadm_config.yaml
   [ \$? != 0 ] && echo "error: can't initialize cluster" && exit 1
 
   ################################################################################
@@ -499,7 +485,7 @@ if [ \$CLUSTER = true ] ; then
 
   ################################################################################
   # install projectcalico tigera-operator v3.26.1
-  helm upgrade --install tigera-operator helm/tigera-operator/tigera-operator-v3.26.1.tgz \
+  helm upgrade --install tigera-operator helm/tigera-operator-v3.26.1.tgz \
     --create-namespace \
     --namespace tigera-operator \
     --version v3.26.1
@@ -521,7 +507,7 @@ if [ \$SINGLE = true ] ; then
 
   ################################################################################
   # install projectcalico tigera-operator v3.26.1
-  helm upgrade --install tigera-operator helm/tigera-operator/tigera-operator-v3.26.1.tgz \
+  helm upgrade --install tigera-operator helm/tigera-operator-v3.26.1.tgz \
     --create-namespace \
     --namespace tigera-operator \
     --version v3.26.1
@@ -533,7 +519,7 @@ if [ \$SINGLE = true ] ; then
 
   ################################################################################
   # install openebs openebs 3.9.0
-  helm upgrade --install openebs helm/openebs/openebs-3.9.0.tgz \
+  helm upgrade --install openebs helm/openebs-3.9.0.tgz \
     --create-namespace \
     --namespace openebs \
     --version 3.9.0
@@ -543,7 +529,7 @@ if [ \$SINGLE = true ] ; then
 
   ################################################################################
   # install ingress-nginx controller
-  helm upgrade --install ingress-nginx helm/ingress-nginx/ingress-nginx-4.7.1.tgz \
+  helm upgrade --install ingress-nginx helm/ingress-nginx-4.7.1.tgz \
     --create-namespace \
     --namespace ingress-nginx \
     --version 4.7.1 \
@@ -553,7 +539,7 @@ if [ \$SINGLE = true ] ; then
 
   ################################################################################
   # install cert-manager
-  helm upgrade --install cert-manager helm/cert-manager/cert-manager-v1.12.4.tgz \
+  helm upgrade --install cert-manager helm/cert-manager-v1.12.4.tgz \
     --create-namespace \
     --namespace cert-manager \
     --version v1.12.4 \
@@ -563,9 +549,9 @@ if [ \$SINGLE = true ] ; then
 
   ################################################################################
   # alertmanager, prometheus and grafana 
-  helm upgrade --install kube-prometheus-stack helm/kube-prometheus-stack/kube-prometheus-stack-50.3.1.tgz \
+  helm upgrade --install kube-prometheus-stack helm/kube-prometheus-stack-50.3.1.tgz \
     --create-namespace \
-    --namespace kube-prometheus-stack \
+    --namespace monitoring \
     --version 50.3.1 \
     --set alertmanager.service.type=NodePort \
     --set prometheus.service.type=NodePort \
@@ -599,7 +585,7 @@ if [ \$JOIN = true ] && [ \$WORKER = true ] ; then
 
   ################################################################################
   # install ingress-nginx controller
-  helm upgrade --install ingress-nginx helm/ingress-nginx/ingress-nginx-4.7.1.tgz \
+  helm upgrade --install ingress-nginx helm/ingress-nginx-4.7.1.tgz \
     --create-namespace \
     --namespace ingress-nginx \
     --version 4.7.1 \
@@ -609,7 +595,7 @@ if [ \$JOIN = true ] && [ \$WORKER = true ] ; then
 
   ################################################################################
   # install cert-manager
-  helm upgrade --install cert-manager helm/cert-manager/cert-manager-v1.12.4.tgz \
+  helm upgrade --install cert-manager helm/cert-manager-v1.12.4.tgz \
     --create-namespace \
     --namespace cert-manager \
     --version v1.12.4 \
@@ -667,10 +653,10 @@ TAR_FILE="${NAME}-${VERSION}.tgz"
 SELF_EXTRACTABLE="$TAR_FILE.self"
 PACK=true
 
-if [[ ${PACK} = true ]] ; then
+if [[ $PACK = true ]] ; then
   echo "Be patient creating self extracting archive ..."
   # pack and create self extracting archive
-  tar -czf ${TAR_FILE}  setup.sh deb/ container/ artefact/ helm/
+  tar -czf $TAR_FILE  setup.sh deb/ container/ artefact/ helm/
 
   echo '#!/bin/sh' > $SELF_EXTRACTABLE
   echo 'echo Be patient extracting archive ...' >> $SELF_EXTRACTABLE
@@ -684,9 +670,9 @@ fi
 
 ################################################################################
 # cleanup
-CLEANUP=false
+CLEANUP=true
 
-if [[ ${CLEANUP} = true ]] ; then
+if [[ $CLEANUP = true ]] ; then
   rm -rf $TAR_FILE setup.sh deb/ container/ artefact/ helm/
 fi
 
