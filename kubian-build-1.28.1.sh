@@ -393,7 +393,7 @@ sysctl --system
 ################################################################################
 # disable swap
 sed -e "/swap/ s/^/#/" -i /etc/fstab
-swapoff -all
+swapoff --all
 
 # prevent swap from being re-enabled via systemd
 systemctl mask dev-sda3.swap
