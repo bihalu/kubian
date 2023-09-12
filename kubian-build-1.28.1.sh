@@ -328,6 +328,16 @@ kubernetesVersion: $VERSION
 networking:
   serviceSubnet: $SVC_NETWORK_CIDR
   podSubnet: $POD_NETWORK_CIDR
+controllerManager:
+  extraArgs:
+    bind-address: "0.0.0.0"
+scheduler:
+  extraArgs:
+    bind-address: "0.0.0.0"
+etcd:
+  local:
+    extraArgs:
+      listen-metrics-urls: "http://0.0.0.0:2381"
 #controlPlaneEndpoint: <is set at init>
 EOF_KUBEADM_CONFIG
 
@@ -539,9 +549,9 @@ if [ \$SINGLE = true ] ; then
 
   ################################################################################
   # patch metrics endpoints for controller-manager, scheduler and etcd
-  sed -e "s/- --bind-address=127.0.0.1/- --bind-address=0.0.0.0/" -i /etc/kubernetes/manifests/kube-controller-manager.yaml
-  sed -e "s/- --bind-address=127.0.0.1/- --bind-address=0.0.0.0/" -i /etc/kubernetes/manifests/kube-scheduler.yaml
-  sed -e "s/- --listen-metrics-urls=http:\/\/127.0.0.1/- --listen-metrics-urls=http:\/\/0.0.0.0/" -i /etc/kubernetes/manifests/etcd.yaml
+  #sed -e "s/- --bind-address=127.0.0.1/- --bind-address=0.0.0.0/" -i /etc/kubernetes/manifests/kube-controller-manager.yaml
+  #sed -e "s/- --bind-address=127.0.0.1/- --bind-address=0.0.0.0/" -i /etc/kubernetes/manifests/kube-scheduler.yaml
+  #sed -e "s/- --listen-metrics-urls=http:\/\/127.0.0.1/- --listen-metrics-urls=http:\/\/0.0.0.0/" -i /etc/kubernetes/manifests/etcd.yaml
 fi
 
 ################################################################################
