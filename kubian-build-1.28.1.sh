@@ -90,14 +90,9 @@ mkdir -p deb/
 
 aptitude clean
 
-SKIP_PACKAGES=0
-
 for PACKAGE in "${PACKAGES[@]}" ; do
   # don't process commented out packages
   [[ ${PACKAGE:0:1} = \# ]] && continue
-
-  # skip packages
-  [[ ${SKIP_PACKAGES} -gt 0 ]] && ((SKIP_PACKAGES--)) && continue
 
   # parse package data
   PACKAGE_DATA=($PACKAGE)
@@ -107,15 +102,15 @@ for PACKAGE in "${PACKAGES[@]}" ; do
   PACKAGE_FILE="${PACKAGE_NAME}_${PACKAGE_VERSION}_${PACKAGE_ARCH}.deb"
 
   # skip download if already available
-  [[ -f deb/${PACKAGE_FILE} ]] && continue
+  [[ -f deb/$PACKAGE_FILE ]] && continue
 
   # download package
   aptitude --download-only install -y $PACKAGE_NAME
-  cp /var/cache/apt/archives/${PACKAGE_FILE} deb/
+  cp /var/cache/apt/archives/$PACKAGE_FILE deb/
   if [[ $? != 0 ]] ; then
     # aptitude will not download if package is installed, try download reinstall
     aptitude --download-only reinstall $PACKAGE_NAME
-    cp /var/cache/apt/archives/${PACKAGE_FILE} deb/
+    cp /var/cache/apt/archives/$PACKAGE_FILE deb/
     [[ $? != 0 ]] && exit 1
   fi 
 done
@@ -175,42 +170,30 @@ registry.k8s.io/etcd:3.5.9-0
 registry.k8s.io/pause:3.9
 EOL_IMAGES
 
-SKIP_IMAGES=0
-PULL=true
 CONTAINER_IMAGES=""
 
 for IMAGE in "${IMAGES[@]}" ; do
   # don't process commented out images
   [[ ${IMAGE:0:1} = \# ]] && continue
 
-  # skip images
-  [[ ${SKIP_IMAGES} -gt 0 ]] && ((SKIP_IMAGES--)) && continue
+  ctr image pull $IMAGE
 
-  # pull image
-  if [[ ${PULL} = true ]] ; then
-    ctr image pull ${IMAGE}
-
-    # exit on pull error
-    [[ $? != 0 ]] && echo "can't pull image" && exit 1
-  fi
+  # exit on pull error
+  [[ $? != 0 ]] && echo "can't pull image" && exit 1
 
   CONTAINER_IMAGES+=" "
-  CONTAINER_IMAGES+=${IMAGE}
+  CONTAINER_IMAGES+=$IMAGE
 done
 
-SAVE=true
+# create folder for container images
+mkdir -p container
 
-if [[ ${SAVE} = true ]] ; then
-  # export images as tar file
-  mkdir -p container
+# cleanup container images tar file
+[[ -f container/images.tar ]] && rm -f container/images.tar
 
-  # cleanup container images tar file
-  [[ -f container/images.tar ]] && rm -f container/images.tar
-
-  # export all container images to images.tar 
-  echo "Be patient exporting container images ..."
-  ctr images export container/images.tar ${CONTAINER_IMAGES}
-fi
+# export all container images to images.tar 
+echo "Be patient exporting container images ..."
+ctr images export container/images.tar $CONTAINER_IMAGES
 
 ################################################################################
 # helm charts -> chart_url chart_repo chart_name chart_version
@@ -222,16 +205,11 @@ https://kubernetes.github.io/ingress-nginx ingress-nginx ingress-nginx 4.7.1
 https://projectcalico.docs.tigera.io/charts projectcalico tigera-operator v3.26.1
 EOL_HELM_CHARTS
 
-SKIP_CHARTS=0
-
 mkdir -p helm/
 
 for CHART in "${HELM_CHARTS[@]}" ; do
   # don't process commented out helm charts
   [[ ${CHART:0:1} = \# ]] && continue
-
-  # skip helm charts
-  [[ ${SKIP_CHARTS} -gt 0 ]] && ((SKIP_CHARTS--)) && continue
 
   # parse chart data
   CHART_DATA=($CHART)
@@ -241,13 +219,13 @@ for CHART in "${HELM_CHARTS[@]}" ; do
   CHART_VERSION="${CHART_DATA[3]}"
 
   # continue if helmchart exists
-  [[ -f helm/${CHART_NAME}-${CHART_VERSION}.tgz ]] && continue
+  [[ -f helm/$CHART_NAME-$CHART_VERSION.tgz ]] && continue
 
   # add helm repo
-  helm repo add ${CHART_REPO} ${CHART_URL} 
+  helm repo add $CHART_REPO $CHART_URL 
 
   # pull helm chart
-  helm pull ${CHART_REPO}/${CHART_NAME} --version ${CHART_VERSION} --destination helm/
+  helm pull $CHART_REPO/$CHART_NAME --version $CHART_VERSION --destination helm/
 
   # exit on pull error
   [[ $? != 0 ]] && exit 1
@@ -350,7 +328,7 @@ kubernetesVersion: $VERSION
 networking:
   serviceSubnet: $SVC_NETWORK_CIDR
   podSubnet: $POD_NETWORK_CIDR
-#controlPlaneEndpoint: <is set during initialization>
+#controlPlaneEndpoint: <is set at init>
 EOF_KUBEADM_CONFIG
 
 ################################################################################
@@ -414,7 +392,7 @@ sysctl --system
 
 ################################################################################
 # disable swap
-sed -ie '/swap/ s/^/#/' /etc/fstab
+sed -e "/swap/ s/^/#/" -i /etc/fstab
 swapoff -all
 
 # prevent swap from being re-enabled via systemd
@@ -649,24 +627,21 @@ chmod +x setup.sh
 
 ################################################################################
 # create self extracting archive
-TAR_FILE="${NAME}-${VERSION}.tgz"
+TAR_FILE="$NAME-$VERSION.tgz"
 SELF_EXTRACTABLE="$TAR_FILE.self"
-PACK=true
 
-if [[ $PACK = true ]] ; then
-  echo "Be patient creating self extracting archive ..."
-  # pack and create self extracting archive
-  tar -czf $TAR_FILE  setup.sh deb/ container/ artefact/ helm/
+echo "Be patient creating self extracting archive ..."
+# pack and create self extracting archive
+tar -czf $TAR_FILE  setup.sh deb/ container/ artefact/ helm/
 
-  echo '#!/bin/sh' > $SELF_EXTRACTABLE
-  echo 'echo Be patient extracting archive ...' >> $SELF_EXTRACTABLE
-  echo 'dd bs=`head -5 $0 | wc -c` skip=1 if=$0 | gunzip -c | tar -x' >> $SELF_EXTRACTABLE
-  echo 'exec ./setup.sh $1 $2 $3' >> $SELF_EXTRACTABLE
-  echo '######################################################################' >> $SELF_EXTRACTABLE
+echo '#!/bin/sh' > $SELF_EXTRACTABLE
+echo 'echo Be patient extracting archive ...' >> $SELF_EXTRACTABLE
+echo 'dd bs=`head -5 $0 | wc -c` skip=1 if=$0 | gunzip -c | tar -x' >> $SELF_EXTRACTABLE
+echo 'exec ./setup.sh $1 $2 $3' >> $SELF_EXTRACTABLE
+echo '######################################################################' >> $SELF_EXTRACTABLE
 
-  cat $TAR_FILE >> $SELF_EXTRACTABLE
-  chmod a+x $SELF_EXTRACTABLE
-fi
+cat $TAR_FILE >> $SELF_EXTRACTABLE
+chmod a+x $SELF_EXTRACTABLE
 
 ################################################################################
 # cleanup
