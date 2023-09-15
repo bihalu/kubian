@@ -632,7 +632,7 @@ fi
 
 ################################################################################
 # cleanup
-#rm -rf setup.sh deb/ container/ artefact/ helm/  
+rm -rf setup.sh deb/ container/ artefact/ # helm/  
 
 ################################################################################
 # finish
