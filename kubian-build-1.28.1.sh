@@ -10,7 +10,7 @@ BUILD_START=$(date +%s)
 
 ################################################################################
 # install aptitude apt-transport-https gpg
-apt install -y aptitude apt-transport-https gpg containerd
+apt install -y aptitude apt-transport-https gpg
 
 ################################################################################
 # add kubernetes repository and import google gpg key
@@ -84,6 +84,21 @@ libprotobuf32:amd64 3.21.12-3 amd64
 python3-protobuf 3.21.12-3 amd64
 runc 1.1.5+ds1-1+b1 amd64
 sgml-base 1.31 all
+# gpg
+dirmngr 2.2.40-1.1 amd64
+gnupg 2.2.40-1.1 all
+gnupg-l10n 2.2.40-1.1 all
+gnupg-utils 2.2.40-1.1 amd64
+gpg 2.2.40-1.1 amd64
+gpg-agent 2.2.40-1.1 amd64
+gpg-wks-client 2.2.40-1.1 amd64
+gpg-wks-server 2.2.40-1.1 amd64
+gpgconf 2.2.40-1.1 amd64
+gpgsm 2.2.40-1.1 amd64
+libassuan0:amd64 2.5.5-5 amd64
+libksba8:amd64 1.6.3-2 amd64
+libnpth0:amd64 1.6-3 amd64
+pinentry-curses 1.2.1-1 amd64
 EOL_PACKAGES
 
 mkdir -p deb/
