@@ -120,11 +120,11 @@ for PACKAGE in "${PACKAGES[@]}" ; do
   [[ -f deb/$PACKAGE_FILE ]] && continue
 
   # download package
-  aptitude --download-only install -y $PACKAGE_NAME
+  aptitude --download-only install -y $PACKAGE_NAME=$PACKAGE_VERSION
   cp /var/cache/apt/archives/$PACKAGE_FILE deb/
   if [[ $? != 0 ]] ; then
     # aptitude will not download if package is installed, try download reinstall
-    aptitude --download-only reinstall $PACKAGE_NAME
+    aptitude --download-only reinstall $PACKAGE_NAME=$PACKAGE_VERSION
     cp /var/cache/apt/archives/$PACKAGE_FILE deb/
     [[ $? != 0 ]] && exit 1
   fi 
