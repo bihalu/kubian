@@ -460,7 +460,7 @@ systemctl enable kubelet
 ################################################################################
 # import container images
 echo "Be patient import container images ..."
-ctr --namespace k8s.io image import container/images.tar
+ctr --namespace k8s.io images import container/images.tar
 
 ################################################################################
 # init
@@ -561,12 +561,6 @@ if [ \$SINGLE = true ] ; then
     --set grafana.service.type=NodePort \
     --set grafana.service.nodePort=30303 \
     --values artefact/prom_values.yaml
-
-  ################################################################################
-  # patch metrics endpoints for controller-manager, scheduler and etcd
-  #sed -e "s/- --bind-address=127.0.0.1/- --bind-address=0.0.0.0/" -i /etc/kubernetes/manifests/kube-controller-manager.yaml
-  #sed -e "s/- --bind-address=127.0.0.1/- --bind-address=0.0.0.0/" -i /etc/kubernetes/manifests/kube-scheduler.yaml
-  #sed -e "s/- --listen-metrics-urls=http:\/\/127.0.0.1/- --listen-metrics-urls=http:\/\/0.0.0.0/" -i /etc/kubernetes/manifests/etcd.yaml
 fi
 
 ################################################################################
