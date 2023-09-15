@@ -62,12 +62,12 @@ libonig5:amd64 6.9.8-1 amd64
 # curl
 curl 7.88.1-10+deb12u1 amd64
 libcurl4:amd64 7.88.1-10+deb12u1 amd64
-# ethtool (replace colon with %3a in filename)
-ethtool 1%3a6.1-1 amd64
+# ethtool
+ethtool 1:6.1-1 amd64
 # socat
 socat 1.7.4.4-2 amd64
-# conntrack (replace colon with %3a in filename)
-conntrack 1%3a1.4.7-1+b2 amd64
+# conntrack
+conntrack 1:1.4.7-1+b2 amd64
 # cri-tools
 cri-tools 1.26.0-00 amd64
 # kubernetes
@@ -114,7 +114,8 @@ for PACKAGE in "${PACKAGES[@]}" ; do
   PACKAGE_NAME="${PACKAGE_DATA[0]%:amd64}"
   PACKAGE_VERSION="${PACKAGE_DATA[1]}"
   PACKAGE_ARCH="${PACKAGE_DATA[2]}"
-  PACKAGE_FILE="${PACKAGE_NAME}_${PACKAGE_VERSION}_${PACKAGE_ARCH}.deb"
+  PACKAGE_VERSION_FILE=$(echo $PACKAGE_VERSION |sed 's/:/%3a/')
+  PACKAGE_FILE="${PACKAGE_NAME}_${PACKAGE_VERSION_FILE}_${PACKAGE_ARCH}.deb"
 
   # skip download if already available
   [[ -f deb/$PACKAGE_FILE ]] && continue
