@@ -583,6 +583,14 @@ if [ \$SINGLE = true ] ; then
     --values artefact/prom-values.yaml
 
   kubectl apply -f artefact/grafana-secret.yaml
+  
+  # patch metrics bind address in configmap kube-proxy
+  kubectl get configmap kube-proxy --namespace kube-system -o yaml | \
+  sed 's/metricsBindAddress: ""/metricsBindAddress: "0.0.0.0"/' | \
+  kubectl create configmap kube-proxy -o yaml --dry-run=client | \
+  kubectl apply -f -
+
+  kubectl delete pod --selector k8s-app=kube-proxy --namespace kube-system
 fi
 
 ################################################################################
