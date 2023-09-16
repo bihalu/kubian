@@ -313,16 +313,18 @@ spec:
          class: nginx
 EOF_ISSUER
 
+GRAFANA_ADMIN_PASSWORD=$(openssl rand -base64 16 | base64)
+
 # graphana secret -> grafana_secret.yaml
 tee artefact/grafana-secret.yaml <<EOF_GRAFANA_SECRET
 apiVersion: v1
 kind: Secret
-namespace: monitoring
 metadata:
   name: "grafana-secret"
+  namespace: monitoring
 type: Opaque
 data:
-   admin-password: yto9xMT69Adi3fM9hiw=
+   admin-password: $GRAFANA_ADMIN_PASSWORD
    admin-user: YWRtaW4=
    ldap-toml: ""
 EOF_GRAFANA_SECRET
