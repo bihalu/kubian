@@ -313,8 +313,25 @@ spec:
          class: nginx
 EOF_ISSUER
 
-# prometheus values -> prom_values.yaml
-tee artefact/prom_values.yaml <<EOF_PROM_VALUES
+# graphana secret -> grafana_secret.yaml
+tee artefact/grafana-secret.yaml <<EOF_GRAFANA_SECRET
+apiVersion: v1
+kind: Secret
+namespace: monitoring
+metadata:
+  name: "grafana-secret"
+type: Opaque
+data:
+   admin-password: yto9xMT69Adi3fM9hiw=
+   admin-user: YWRtaW4=
+   ldap-toml: ""
+EOF_GRAFANA_SECRET
+
+# prometheus values -> prom-values.yaml
+tee artefact/prom-values.yaml <<EOF_PROM_VALUES
+grafana:
+  admin:
+    existingSecret: grafana-secret
 alertmanager:
   alertmanagerSpec:
     storage:
@@ -561,7 +578,9 @@ if [ \$SINGLE = true ] ; then
     --set prometheus.service.type=NodePort \
     --set grafana.service.type=NodePort \
     --set grafana.service.nodePort=30303 \
-    --values artefact/prom_values.yaml
+    --values artefact/prom-values.yaml
+
+  kubectl apply -f artefact/grafana-secret.yaml
 fi
 
 ################################################################################
