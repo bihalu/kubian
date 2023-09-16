@@ -418,8 +418,7 @@ overlay
 br_netfilter
 EOF_MODULES
 
-modprobe overlay
-modprobe br_netfilter
+modprobe --all overlay br_netfilter
 
 tee /etc/sysctl.d/kubernetes.conf <<EOF_SYSCTL
 net.bridge.bridge-nf-call-ip6tables = 1
@@ -581,7 +580,6 @@ if [ \$SINGLE = true ] ; then
   # patch metrics bind address in configmap kube-proxy
   kubectl get configmap kube-proxy --namespace kube-system -o yaml | \
   sed 's/metricsBindAddress: ""/metricsBindAddress: "0.0.0.0"/' | \
-  kubectl create configmap kube-proxy -o yaml --dry-run=client | \
   kubectl apply -f -
 
   kubectl delete pod --selector k8s-app=kube-proxy --namespace kube-system
