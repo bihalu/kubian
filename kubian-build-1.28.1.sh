@@ -41,7 +41,7 @@ systemctl restart containerd
 ################################################################################
 # install helm
 helm version 2>&1 > /dev/null
-if [[ $? != 0 ]] ; then
+if [ $? != 0 ] ; then
   wget https://get.helm.sh/helm-v3.12.3-linux-amd64.tar.gz -O - | tar Cxzf /tmp - && cp /tmp/linux-amd64/helm /usr/local/bin/
 fi
 
@@ -107,7 +107,7 @@ aptitude clean
 
 for PACKAGE in "${PACKAGES[@]}" ; do
   # don't process commented out packages
-  [[ ${PACKAGE:0:1} = \# ]] && continue
+  [ ${PACKAGE:0:1} = \# ] && continue
 
   # parse package data
   PACKAGE_DATA=($PACKAGE)
@@ -118,16 +118,16 @@ for PACKAGE in "${PACKAGES[@]}" ; do
   PACKAGE_FILE="${PACKAGE_NAME}_${PACKAGE_VERSION_FILE}_${PACKAGE_ARCH}.deb"
 
   # skip download if already available
-  [[ -f deb/$PACKAGE_FILE ]] && continue
+  [ -f deb/$PACKAGE_FILE ] && continue
 
   # download package
   aptitude --download-only install -y $PACKAGE_NAME=$PACKAGE_VERSION
   cp /var/cache/apt/archives/$PACKAGE_FILE deb/
-  if [[ $? != 0 ]] ; then
+  if [ $? != 0 ] ; then
     # aptitude will not download if package is installed, try download reinstall
     aptitude --download-only reinstall $PACKAGE_NAME
     cp /var/cache/apt/archives/$PACKAGE_FILE deb/
-    [[ $? != 0 ]] && exit 1
+    [ $? != 0 ] && exit 1
   fi 
 done
 
@@ -190,12 +190,12 @@ CONTAINER_IMAGES=""
 
 for IMAGE in "${IMAGES[@]}" ; do
   # don't process commented out images
-  [[ ${IMAGE:0:1} = \# ]] && continue
+  [ ${IMAGE:0:1} = \# ] && continue
 
   ctr image pull $IMAGE
 
   # exit on pull error
-  [[ $? != 0 ]] && echo "can't pull image" && exit 1
+  [ $? != 0 ] && echo "ERROR: can't pull image" && exit 1
 
   CONTAINER_IMAGES+=" "
   CONTAINER_IMAGES+=$IMAGE
@@ -205,7 +205,7 @@ done
 mkdir -p container
 
 # cleanup container images tar file
-[[ -f container/images.tar ]] && rm -f container/images.tar
+[ -f container/images.tar ] && rm -f container/images.tar
 
 # export all container images to images.tar 
 echo "Be patient exporting container images ..."
@@ -225,7 +225,7 @@ mkdir -p helm/
 
 for CHART in "${HELM_CHARTS[@]}" ; do
   # don't process commented out helm charts
-  [[ ${CHART:0:1} = \# ]] && continue
+  [ ${CHART:0:1} = \# ] && continue
 
   # parse chart data
   CHART_DATA=($CHART)
@@ -235,7 +235,7 @@ for CHART in "${HELM_CHARTS[@]}" ; do
   CHART_VERSION="${CHART_DATA[3]}"
 
   # continue if helmchart exists
-  [[ -f helm/$CHART_NAME-$CHART_VERSION.tgz ]] && continue
+  [ -f helm/$CHART_NAME-$CHART_VERSION.tgz ] && continue
 
   # add helm repo
   helm repo add $CHART_REPO $CHART_URL 
@@ -244,7 +244,7 @@ for CHART in "${HELM_CHARTS[@]}" ; do
   helm pull $CHART_REPO/$CHART_NAME --version $CHART_VERSION --destination helm/
 
   # exit on pull error
-  [[ $? != 0 ]] && exit 1
+  [ $? != 0 ] && echo "ERROR: can't pull helm chart" && exit 1
 done
 
 ################################################################################
@@ -252,27 +252,27 @@ done
 mkdir -p artefact
 
 # download helm v3.12.3 -> https://github.com/helm/helm/releases/tag/v3.12.3
-if [[ -f artefact/helm-v3.12.3-linux-amd64.tar.gz ]] ; then
+if [ -f artefact/helm-v3.12.3-linux-amd64.tar.gz ] ; then
   echo "file exists artefact/helm-v3.12.3-linux-amd64.tar.gz" 
 else
   wget https://get.helm.sh/helm-v3.12.3-linux-amd64.tar.gz -P artefact
 fi
 
 # download k9s v0.27.4 -> https://github.com/derailed/k9s/releases/tag/v0.27.4
-if [[ -f artefact/k9s_Linux_amd64.tar.gz ]] ; then
+if [ -f artefact/k9s_Linux_amd64.tar.gz ] ; then
   echo "file exists artefact/k9s_Linux_amd64.tar.gz" 
 else
   wget https://github.com/derailed/k9s/releases/download/v0.27.4/k9s_Linux_amd64.tar.gz -P artefact
 fi
 
 # download calico cni-plugin v3.20.6 -> calico
-if [[ -f artefact/calico ]] ; then
+if [ -f artefact/calico ] ; then
   echo "file exists artefact/calico" 
 else
   wget https://github.com/projectcalico/cni-plugin/releases/download/v3.20.6/calico-amd64 -O artefact/calico
 fi
 
-if [[ -f artefact/calico-ipam ]] ; then
+if [ -f artefact/calico-ipam ] ; then
   echo "file exists artefact/calico-ipam" 
 else
   wget https://github.com/projectcalico/cni-plugin/releases/download/v3.20.6/calico-ipam-amd64 -O artefact/calico-ipam
@@ -354,7 +354,7 @@ etcd:
   local:
     extraArgs:
       listen-metrics-urls: "http://0.0.0.0:2381"
-#controlPlaneEndpoint: <is set at init>
+#controlPlaneEndpoint: <is set during init>
 EOF_KUBEADM_CONFIG
 
 ################################################################################
@@ -474,7 +474,7 @@ if [ \$INIT = true ] ; then
   echo "controlPlaneEndpoint: \$IP_ADDRESS" >> artefact/kubeadm_config.yaml
 
   kubeadm init --upload-certs --node-name=\$HOSTNAME --config artefact/kubeadm_config.yaml
-  [ \$? != 0 ] && echo "error: can't initialize cluster" && exit 1
+  [ \$? != 0 ] && echo "ERROR: can't initialize cluster" && exit 1
 
   ################################################################################
   # copy kube config
@@ -496,7 +496,7 @@ if [ \$CLUSTER = true ] ; then
   if [ \$? != 0 ] ; then
     # give grace period of 2 minutes to get node ready
     kubectl wait --timeout=2m --for=condition=Ready node/\$HOSTNAME
-    [ \$? != 0 ] && echo "error: can't initialize cluster" && exit 1
+    [ \$? != 0 ] && echo "ERROR: can't initialize cluster" && exit 1
   fi
 fi
 
@@ -518,7 +518,7 @@ if [ \$SINGLE = true ] ; then
   if [ \$? != 0 ] ; then
     # give grace period of 2 minutes to get node ready
     kubectl wait --timeout=2m --for=condition=Ready node/\$HOSTNAME
-    [ \$? != 0 ] && echo "error: can't initialize cluster" && exit 1
+    [ \$? != 0 ] && echo "ERROR: can't initialize cluster" && exit 1
   fi
 
   ################################################################################
@@ -574,7 +574,7 @@ if [ \$JOIN = true ] && [ \$WORKER = true ] ; then
     JOIN_WORKER=\$(ssh -oBatchMode=yes \$3 kubeadm token create --print-join-command)
     eval \$JOIN_WORKER
   else
-    echo "error: can't connect to \$3 via ssh"
+    echo "ERROR: can't connect to \$3 via ssh"
     exit 1
   fi
 
@@ -613,7 +613,7 @@ if [ \$JOIN = true ] && [ \$CONTROLPLANE = true ] ; then
     JOIN_CONTROLPLANE=\$(ssh -oBatchMode=yes \$3 kubeadm token create --print-join-command --certificate-key \$CERTIFICATE_KEY)
     eval \$JOIN_CONTROLPLANE
   else
-    echo "error: can't connect to \$3 via ssh"
+    echo "ERROR: can't connect to \$3 via ssh"
     exit 1
   fi
 fi
@@ -667,7 +667,7 @@ chmod a+x $SELF_EXTRACTABLE
 # cleanup
 CLEANUP=true
 
-if [[ $CLEANUP = true ]] ; then
+if [ $CLEANUP = true ] ; then
   rm -rf $TAR_FILE setup.sh deb/ container/ artefact/ helm/
 fi
 
