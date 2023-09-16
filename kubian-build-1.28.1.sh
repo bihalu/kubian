@@ -14,10 +14,10 @@ apt install -y aptitude apt-transport-https gpg
 
 ################################################################################
 # add kubernetes repository and import google gpg key
-tee /etc/apt/sources.list.d/kubernetes.list <<KUBERNETES_REPO_EOF
+tee /etc/apt/sources.list.d/kubernetes.list <<EOL_KUBERNETES_REPO
 deb http://apt.kubernetes.io/ kubernetes-xenial main
 # deb-src http://apt.kubernetes.io/ kubernetes-xenial main
-KUBERNETES_REPO_EOF
+EOL_KUBERNETES_REPO
 
 wget https://packages.cloud.google.com/apt/doc/apt-key.gpg -O - | gpg --batch --yes --dearmour --output /etc/apt/trusted.gpg.d/cgoogle.gpg
 
@@ -273,7 +273,7 @@ else
 fi
 
 # issuer for cert-manager (letsencrypt) -> issuer-letsencrypt.yaml
-tee artefact/issuer-letsencrypt.yaml <<EOF_ISSUER
+tee artefact/issuer-letsencrypt.yaml <<EOL_ISSUER
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
@@ -305,12 +305,12 @@ spec:
     - http01:
        ingress:
          class: nginx
-EOF_ISSUER
+EOL_ISSUER
 
 # autogenerate grafana admin password -> grafana_secret.yaml
 GRAFANA_ADMIN_PASSWORD=$(echo -n `openssl rand -base64 16` | base64)
 
-tee artefact/grafana-secret.yaml <<EOF_GRAFANA_SECRET
+tee artefact/grafana-secret.yaml <<EOL_GRAFANA_SECRET
 apiVersion: v1
 kind: Secret
 metadata:
@@ -321,10 +321,10 @@ data:
    admin-password: $GRAFANA_ADMIN_PASSWORD
    admin-user: YWRtaW4=
    ldap-toml: ""
-EOF_GRAFANA_SECRET
+EOL_GRAFANA_SECRET
 
 # prometheus values -> prom-values.yaml
-tee artefact/prom-values.yaml <<EOF_PROM_VALUES
+tee artefact/prom-values.yaml <<EOL_PROM_VALUES
 grafana:
   admin:
     existingSecret: grafana-secret
@@ -346,10 +346,10 @@ prometheus:
           resources:
             requests:
               storage: 10Gi
-EOF_PROM_VALUES
+EOL_PROM_VALUES
 
-# kubeadm_config.yaml -> https://kubernetes.io/docs/reference/config-api/kubeadm-config.v1beta3/
-tee artefact/kubeadm_config.yaml <<EOF_KUBEADM_CONFIG
+# kubeadm-config.yaml -> https://kubernetes.io/docs/reference/config-api/kubeadm-config.v1beta3/
+tee artefact/kubeadm-config.yaml <<EOL_KUBEADM_CONFIG
 apiVersion: kubeadm.k8s.io/v1beta3
 kind: ClusterConfiguration
 clusterName: $CLUSTER_NAME
@@ -367,12 +367,11 @@ etcd:
   local:
     extraArgs:
       listen-metrics-urls: "http://0.0.0.0:2381"
-#controlPlaneEndpoint: <is set during init>
-EOF_KUBEADM_CONFIG
+EOL_KUBEADM_CONFIG
 
 ################################################################################
 # create setup.sh
-tee setup.sh <<EOF_SETUP
+tee setup.sh <<EOL_SETUP
 #!/bin/bash
 
 SETUP_START=\$(date +%s)
@@ -413,18 +412,18 @@ echo "# airgap no repos" > /etc/apt/sources.list
 
 ################################################################################
 # add kernel module for networking stuff
-tee /etc/modules-load.d/k8s.conf <<EOF_MODULES
+tee /etc/modules-load.d/k8s.conf <<EOL_MODULES
 overlay
 br_netfilter
-EOF_MODULES
+EOL_MODULES
 
 modprobe --all overlay br_netfilter
 
-tee /etc/sysctl.d/kubernetes.conf <<EOF_SYSCTL
+tee /etc/sysctl.d/kubernetes.conf <<EOL_SYSCTL
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
 net.ipv4.ip_forward = 1
-EOF_SYSCTL
+EOL_SYSCTL
 
 sysctl --system
 
@@ -483,9 +482,9 @@ if [ \$INIT = true ] ; then
   ################################################################################
   # init cluster
   IP_ADDRESS=\$(ip -brief address show eth0 | awk '{print \$3}' | awk -F/ '{print \$1}')
-  echo "controlPlaneEndpoint: \$IP_ADDRESS" >> artefact/kubeadm_config.yaml
+  echo "controlPlaneEndpoint: \$IP_ADDRESS" >> artefact/kubeadm-config.yaml
 
-  kubeadm init --upload-certs --node-name=\$HOSTNAME --config artefact/kubeadm_config.yaml
+  kubeadm init --upload-certs --node-name=\$HOSTNAME --config artefact/kubeadm-config.yaml
   [ \$? != 0 ] && echo "ERROR: can't initialize cluster" && exit 1
 
   ################################################################################
@@ -662,7 +661,7 @@ SETUP_MINUTES=\$(((\$SETUP_END - \$SETUP_START) / 60))
 SETUP_SECONDS=\$((\$SETUP_END - \$SETUP_START - (\$SETUP_MINUTES * 60)))
 
 echo "setup took \$SETUP_MINUTES minutes \$SETUP_SECONDS seconds"
-EOF_SETUP
+EOL_SETUP
 
 chmod +x setup.sh
 
@@ -686,11 +685,7 @@ chmod a+x $SELF_EXTRACTABLE
 
 ################################################################################
 # cleanup
-CLEANUP=true
-
-if [ $CLEANUP = true ] ; then
-  rm -rf $TAR_FILE setup.sh deb/ container/ artefact/ helm/
-fi
+rm -rf $TAR_FILE setup.sh deb/ container/ artefact/ helm/
 
 ################################################################################
 # finish
