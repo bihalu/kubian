@@ -9,8 +9,8 @@ EMAIL="john.doe@inter.net"
 BUILD_START=$(date +%s)
 
 ################################################################################
-# install aptitude apt-transport-https gpg
-apt install -y aptitude apt-transport-https gpg
+# install aptitude apt-transport-https gpg wget
+apt install -y aptitude apt-transport-https gpg wget
 
 ################################################################################
 # add kubernetes repository and import google gpg key
@@ -37,6 +37,10 @@ sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml
 sed -i 's/systemd_cgroup = true/systemd_cgroup = false/' /etc/containerd/config.toml
 
 systemctl restart containerd
+if [ $? != 0 ] ; then
+  echo "No systemd, I think we are on WSL -> start containerd as background process ..."
+  containerd &
+fi
 
 ################################################################################
 # install helm
