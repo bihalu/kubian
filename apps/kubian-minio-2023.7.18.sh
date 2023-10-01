@@ -96,7 +96,7 @@ ctr -n=k8s.io image import container/images.tar
 ################################################################################
 # install minio
 if [ \$INSTALL = true ] ; then
-  helm upgrade --install minio helm/minio/minio-12.8.1.tgz \
+  helm upgrade --install minio helm/minio-12.8.1.tgz \
     --create-namespace \
     --namespace minio \
     --version 12.8.1 \
