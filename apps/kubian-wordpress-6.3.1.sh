@@ -41,7 +41,7 @@ ctr images export container/images.tar $CONTAINER_IMAGES
 ################################################################################
 # helm charts -> chart_url chart_repo chart_name chart_version
 readarray -t HELM_CHARTS <<EOL_HELM_CHARTS
-https://charts.bitnami.com/bitnami bitnami minio 12.8.1
+https://charts.bitnami.com/bitnami bitnami wordpress 17.1.6
 EOL_HELM_CHARTS
 
 mkdir -p helm/
