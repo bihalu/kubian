@@ -5,7 +5,7 @@ If you have no idea about kubernetes, then you should read the documentation fir
 
 TL;DR  
 
-or you can easily try kubernetes with KubA ;-)  
+or you can easily try kubernetes with Kubian ;-)  
 Use the [quickstart](docs/quickstart.md) guide for this.
 
 # Description
