@@ -7,7 +7,7 @@ Set cgroupv1
 sed -i 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="systemd.unified_cgroup_hierarchy=0"/' /etc/default/grub
 update-grub
 reboot
-```bash
+```
 
 ## 2. Build Kubian setup package
 ```bash
