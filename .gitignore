@@ -2,6 +2,6 @@ artefact/
 container/
 deb/
 helm/
-kubian-setup-1.28.1.tgz
-kubian-setup-1.28.1.tgz.self
+*.tgz
+*.self
 setup.sh
