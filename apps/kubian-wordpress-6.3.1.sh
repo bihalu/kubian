@@ -124,7 +124,7 @@ SETUP_END=\$(date +%s)
 SETUP_MINUTES=\$(((\$SETUP_END - \$SETUP_START) / 60))
 SETUP_SECONDS=\$((\$SETUP_END - \$SETUP_START - (\$SETUP_MINUTES * 60)))
 
-echo "app \$1 \$2 took \$SETUP_MINUTES minutes \$SETUP_SECONDS seconds"
+echo "app $NAME $VERSION took \$SETUP_MINUTES minutes \$SETUP_SECONDS seconds"
 EOF_APP
 
 chmod +x app.sh
