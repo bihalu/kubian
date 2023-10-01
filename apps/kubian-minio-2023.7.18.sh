@@ -118,8 +118,8 @@ rm -rf app.sh container/ helm/
 ################################################################################
 # finish
 SETUP_END=\$(date +%s)
-SETUP_MINUTES=\$(echo "(\$SETUP_END - \$SETUP_START) / 60" | bc)
-SETUP_SECONDS=\$(echo "\$SETUP_END - \$SETUP_START - (\$SETUP_MINUTES * 60)" | bc)
+SETUP_MINUTES=\$(((\$SETUP_END - \$SETUP_START) / 60))
+SETUP_SECONDS=\$((\$SETUP_END - \$SETUP_START - (\$SETUP_MINUTES * 60)))
 
 echo "app \$1 \$2 took \$SETUP_MINUTES minutes \$SETUP_SECONDS seconds"
 EOF_APP
@@ -158,7 +158,7 @@ fi
 ################################################################################
 # finish
 BUILD_END=$(date +%s)
-BUILD_MINUTES=$(echo "($BUILD_END - $BUILD_START) / 60" | bc)
-BUILD_SECONDS=$(echo "$BUILD_END - $BUILD_START - ($BUILD_MINUTES * 60)" | bc)
+BUILD_MINUTES=$((($BUILD_END - $BUILD_START) / 60))
+BUILD_SECONDS=$(($BUILD_END - $BUILD_START - ($BUILD_MINUTES * 60)))
 
 echo "build $SELF_EXTRACTABLE took $BUILD_MINUTES minutes $BUILD_SECONDS seconds"
