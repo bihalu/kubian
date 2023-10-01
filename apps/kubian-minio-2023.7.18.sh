@@ -72,7 +72,7 @@ done
 ################################################################################
 # create app.sh
 cat - > app.sh <<EOF_APP
-#!/bin/sh
+#!/bin/bash
 
 SETUP_START=\$(date +%s)
 
@@ -130,30 +130,23 @@ chmod +x app.sh
 # create self extracting archive
 TAR_FILE="${NAME}-${VERSION}.tgz"
 SELF_EXTRACTABLE="$TAR_FILE.self"
-PACK=true
 
-if [[ ${PACK} = true ]] ; then
-  echo "Be patient creating self extracting archive ..."
-  # pack and create self extracting archive
-  tar -czf ${TAR_FILE} app.sh container/ helm/
+echo "Be patient creating self extracting archive ..."
+# pack and create self extracting archive
+tar -czf ${TAR_FILE} app.sh container/ helm/
 
-  echo '#!/bin/sh' > $SELF_EXTRACTABLE
-  echo 'echo Be patient extracting archive ...' >> $SELF_EXTRACTABLE
-  echo 'dd bs=`head -5 $0 | wc -c` skip=1 if=$0 | gunzip -c | tar -x' >> $SELF_EXTRACTABLE
-  echo 'exec ./app.sh $1 $2' >> $SELF_EXTRACTABLE
-  echo '######################################################################' >> $SELF_EXTRACTABLE
+echo '#!/bin/bash' > $SELF_EXTRACTABLE
+echo 'echo Be patient extracting archive ...' >> $SELF_EXTRACTABLE
+echo 'dd bs=`head -5 $0 | wc -c` skip=1 if=$0 | gunzip -c | tar -x' >> $SELF_EXTRACTABLE
+echo 'exec ./app.sh $1 $2' >> $SELF_EXTRACTABLE
+echo '######################################################################' >> $SELF_EXTRACTABLE
 
-  cat $TAR_FILE >> $SELF_EXTRACTABLE
-  chmod a+x $SELF_EXTRACTABLE
-fi
+cat $TAR_FILE >> $SELF_EXTRACTABLE
+chmod a+x $SELF_EXTRACTABLE
 
 ################################################################################
 # cleanup
-CLEANUP=true
-
-if [[ ${CLEANUP} = true ]] ; then
-  rm -rf $TAR_FILE app.sh container/ helm/
-fi
+ rm -rf $TAR_FILE app.sh container/ helm/
 
 ################################################################################
 # finish

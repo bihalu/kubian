@@ -678,7 +678,7 @@ echo "Be patient creating self extracting archive ..."
 # pack and create self extracting archive
 tar -czf $TAR_FILE  setup.sh deb/ container/ artefact/ helm/
 
-echo '#!/bin/sh' > $SELF_EXTRACTABLE
+echo '#!/bin/bash' > $SELF_EXTRACTABLE
 echo 'echo Be patient extracting archive ...' >> $SELF_EXTRACTABLE
 echo 'dd bs=`head -5 $0 | wc -c` skip=1 if=$0 | gunzip -c | tar -x' >> $SELF_EXTRACTABLE
 echo 'exec ./setup.sh $1 $2 $3' >> $SELF_EXTRACTABLE
