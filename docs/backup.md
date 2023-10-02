@@ -7,9 +7,9 @@ wget https://github.com/vmware-tanzu/velero/releases/download/v1.12.0/velero-v1.
 
 ## 2. Customize Velero Install
 You need an S3-compatible object storage provider.  
-In this example i am using MinIO.
-Please note you have to create the bucket beforhand.
-Change the following values in your configuration:
+In this example i am using MinIO.  
+Please note you have to create the bucket beforhand.  
+Change the following values in your configuration:  
 * aws_access_key_id = <your_aws_access_key_id>
 * aws_secret_access_key = <your_aws_secret_access_key>
 * --bucket <your_minio_bucket>
@@ -44,18 +44,21 @@ velero backup create wordpress-backup-20231002 --include-namespaces wordpress
 You can also create a schedule for a daily backup at 1:00 a.m.
 ```bash
 velero schedule create wordpress-backup --schedule="0 1 * * *" --include-namespaces wordpress
+
 velero schedule get
 NAME               STATUS    CREATED                          SCHEDULE    BACKUP TTL   LAST BACKUP   SELECTOR   PAUSED
 wordpress-backup   Enabled   2023-10-02 13:18:02 +0200 CEST   0 1 * * *   0s           n/a           <none>     false
 ```
 
 ## 4. Restore backup
-Please note that the namespace will be deleted before restoring.  
+Please note that the namespace will be deleted before restore.  
 These are full backups that cannot be restored incrementally.  
 ```bash
 velero get backups
 NAME                        STATUS      ERRORS   WARNINGS   CREATED                          EXPIRES   STORAGE LOCATION   SELECTOR
 wordpress-backup-20231002   Completed   0        0          2023-10-02 12:42:00 +0200 CEST   29d       default            <none>
+
 kubectl delete namespace wordpress
+
 velero restore create --from-backup wordpress-backup-20231002
 ```

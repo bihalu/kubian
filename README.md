@@ -20,4 +20,4 @@ Kubernetes applications can be deployed with kubectl or helm. However, you need 
 * minecraft
 
 # Backup
-[Backups](docs/backup.md) are important, kubian uses velero for this.
+ Backups are important, kubian uses [velero](docs/backup.md) for this.
