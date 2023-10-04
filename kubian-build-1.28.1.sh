@@ -188,6 +188,10 @@ registry.k8s.io/kube-scheduler:v1.28.1
 registry.k8s.io/coredns/coredns:v1.10.1
 registry.k8s.io/etcd:3.5.9-0
 registry.k8s.io/pause:3.9
+################################################################################
+# velero -> https://github.com/vmware-tanzu/velero
+docker.io/velero/velero:v1.12.0
+docker.io/velero/velero-plugin-for-aws:v1.8.0
 EOL_IMAGES
 
 CONTAINER_IMAGES=""
