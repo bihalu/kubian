@@ -269,6 +269,13 @@ else
   wget https://github.com/derailed/k9s/releases/download/v0.27.4/k9s_Linux_amd64.tar.gz -P artefact
 fi
 
+# download velero -> https://github.com/vmware-tanzu/velero/releases/tag/v1.12.0
+if [ -f artefact/velero-v1.12.0-linux-amd64.tar.gz ] ; then
+  echo "file exists artefact/velero-v1.12.0-linux-amd64.tar.gz" 
+else
+  wget https://github.com/vmware-tanzu/velero/releases/download/v1.12.0/velero-v1.12.0-linux-amd64.tar.gz -P artefact
+fi
+
 # download calico cni-plugin v3.20.6 -> calico
 if [ -f artefact/calico ] ; then
   echo "file exists artefact/calico" 
@@ -463,6 +470,10 @@ tar Cxzf /tmp artefact/helm-v3.12.3-linux-amd64.tar.gz && cp /tmp/linux-amd64/he
 ################################################################################
 # install k9s
 tar Cxzf /tmp artefact/k9s_Linux_amd64.tar.gz && cp /tmp/k9s /usr/local/bin/
+
+################################################################################
+# install velero
+tar Cxzf /tmp artefact/velero-v1.12.0-linux-amd64.tar.gz && cp /tmp/velero-v1.12.0-linux-amd64/velero /usr/local/bin/
 
 ################################################################################
 # install calico cni-plugins

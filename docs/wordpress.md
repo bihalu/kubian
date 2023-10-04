@@ -1,4 +1,5 @@
 # Wordpress
+Wordpress is launched on node port 30000.
 
 ## Build
 ```bash
