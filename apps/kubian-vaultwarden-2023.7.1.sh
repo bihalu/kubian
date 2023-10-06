@@ -1,16 +1,15 @@
 #!/bin/bash
 
-NAME="kubian-vault"
-VERSION="1.15.0"
+NAME="kubian-vaultwarden"
+VERSION="2023.7.1"
 BUILD_START=$(date +%s)
 
 ################################################################################
 # container images for airgap installation
 readarray -t IMAGES <<EOL_IMAGES
 ################################################################################
-# vault 1.15.0 -> https://artifacthub.io/packages/helm/bitnami/vault/0.3.7
-docker.io/bitnami/vault-k8s:1.3.0-debian-11-r20
-docker.io/bitnami/vault:1.15.0-debian-11-r5
+# vaultwarden 2023.7.1 -> https://artifacthub.io/packages/helm/gabe565/vaultwarden/0.10.3
+ghcr.io/dani-garcia/vaultwarden:1.29.2-alpine
 EOL_IMAGES
 
 CONTAINER_IMAGES=""
@@ -41,7 +40,7 @@ ctr images export container/images.tar $CONTAINER_IMAGES
 ################################################################################
 # helm charts -> chart_url chart_repo chart_name chart_version
 readarray -t HELM_CHARTS <<EOL_HELM_CHARTS
-https://charts.bitnami.com/bitnami bitnami vault 0.3.7
+https://charts.gabe565.com gabe565 vaultwarden 0.10.3
 EOL_HELM_CHARTS
 
 mkdir -p helm/
@@ -95,21 +94,25 @@ echo "Be patient import container images ..."
 ctr -n=k8s.io image import container/images.tar
 
 ################################################################################
-# install vault
+# install vaultwarden
 if [ \$INSTALL = true ] ; then
 
-  helm upgrade --install vault helm/vault-0.3.7.tgz \
+  helm upgrade --install vaultwarden helm/vaultwarden-0.10.3.tgz \
     --create-namespace \
-    --namespace vault \
-    --version 0.3.7 \
-    --set server.service.general.type=NodePort \
-    --set server.service.general.nodePorts.http=30010
+    --namespace vaultwarden \
+    --version 0.10.3 \
+    --set env.ADMIN_TOKEN="\$ADMIN_TOKEN" \
+    --set persistence.data.enabled=true \
+    --set persistence.data.accessMode=ReadWriteOnce \
+    --set persistence.data.size=1Gi \
+    --set service.main.type=NodePort \
+    --set service.main.ports.http.nodePort=30010
 fi
 
 ################################################################################
-# uninstall vault
+# uninstall vaultwarden
 if [ \$UNINSTALL = true ] ; then
-  helm uninstall vault --namespace vault
+  helm uninstall vaultwarden --namespace vaultwarden
 fi
 
 ################################################################################
