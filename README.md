@@ -18,6 +18,7 @@ Kubernetes applications can be deployed with kubectl or helm. However, you need 
 * [wordpress](docs/wordpress.md)
 * [minio](docs/minio.md)
 * [minecraft](docs/minecraft.md)
+* [vaultwarden](docs/vaultwarden.md)
 
 # Backup
  Backups are important, kubian uses [velero](docs/backup.md) for this.

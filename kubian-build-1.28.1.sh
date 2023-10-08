@@ -234,7 +234,7 @@ https://prometheus-community.github.io/helm-charts prometheus-community kube-pro
 https://openebs.github.io/charts openebs openebs 3.9.0
 https://charts.jetstack.io jetstack cert-manager v1.12.4
 https://kubernetes.github.io/ingress-nginx ingress-nginx ingress-nginx 4.7.1
-https://projectcalico.docs.tigera.io/charts projectcalico tigera-operator v3.26.1
+https://projectcalico.docs.tigera.io/charts projectcalico tigera-operator v3.26.1 
 EOL_HELM_CHARTS
 
 mkdir -p helm/
@@ -636,7 +636,17 @@ if [ \$JOIN = true ] && [ \$WORKER = true ] ; then
   fi
 
   ################################################################################
-  # TODO storage openebs mayastore
+  # install openebs openebs 3.9.0 (jiva)
+  helm upgrade --install openebs helm/openebs-3.9.0.tgz \
+    --create-namespace \
+    --namespace openebs \
+    --set jiva.enabled=true \
+    --set jiva.defaultPolicy.replicas=1 \
+    --reuse-values \
+    --version 3.9.0
+
+  # set default storage class
+  kubectl patch storageclass openebs-jiva-csi-default -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
 
   ################################################################################
   # install ingress-nginx controller
