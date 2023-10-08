@@ -51,6 +51,7 @@ fi
 
 ################################################################################
 # deb packages for airgap installation -> https://packages.debian.org
+# installed packages -> dpkg -l | sed '/^ii/!d' | tr -s ' ' | cut -d ' ' -f 2,3,4
 readarray -t PACKAGES <<EOL_PACKAGES
 # iptables
 iptables 1.8.9-2 amd64
@@ -103,6 +104,13 @@ libassuan0:amd64 2.5.5-5 amd64
 libksba8:amd64 1.6.3-2 amd64
 libnpth0:amd64 1.6-3 amd64
 pinentry-curses 1.2.1-1 amd64
+# open-iscsi
+libisns0:amd64 0.101-0.2+b1 amd64
+libopeniscsiusr 2.1.8-1 amd64
+open-iscsi 2.1.8-1 amd64
+# wireguard
+wireguard 1.0.20210914-1 all
+wireguard-tools 1.0.20210914-1+b1 amd64
 EOL_PACKAGES
 
 mkdir -p deb/
@@ -432,7 +440,13 @@ overlay
 br_netfilter
 EOL_MODULES
 
-modprobe --all overlay br_netfilter
+################################################################################
+# add kernel module for iscsi
+tee /etc/modules-load.d/iscsi-tcp.conf <<EOL_ISCSI
+iscsi_tcp
+EOL_ISCSI
+
+modprobe --all overlay br_netfilter iscsi_tcp
 
 tee /etc/sysctl.d/kubernetes.conf <<EOL_SYSCTL
 net.bridge.bridge-nf-call-ip6tables = 1
@@ -454,6 +468,10 @@ systemctl mask dev-sda3.swap
 # install packages
 PACKAGES=\$(find deb -name "*.deb")
 dpkg --install \$PACKAGES
+
+################################################################################
+# enable iscsid service
+systemctl enable --now iscsid
 
 ################################################################################
 # containerd config
@@ -671,7 +689,7 @@ fi
 
 ################################################################################
 # cleanup
-rm -rf setup.sh deb/ container/ artefact/ helm/  
+#rm -rf setup.sh deb/ container/ artefact/ helm/  
 
 ################################################################################
 # finish
