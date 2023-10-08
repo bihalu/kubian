@@ -96,6 +96,7 @@ ctr -n=k8s.io image import container/images.tar
 ################################################################################
 # install vaultwarden
 if [ \$INSTALL = true ] ; then
+  export ADMIN_TOKEN=$(openssl rand -base64 48)
 
   helm upgrade --install vaultwarden helm/vaultwarden-0.10.3.tgz \
     --create-namespace \

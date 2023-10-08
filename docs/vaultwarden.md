@@ -16,7 +16,6 @@ cd ~/kubian/apps
 
 ## Install
 ```bash
-export ADMIN_TOKEN=$(openssl rand -base64 48)
 ./kubian-vaultwarden-2023.7.1.tgz.self install
 ```
 
