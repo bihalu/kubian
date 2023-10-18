@@ -430,10 +430,6 @@ WORKER=false
 [ "\$2" = worker ] && WORKER=true
 
 ################################################################################
-# airgap no repos
-echo "# airgap no repos" > /etc/apt/sources.list
-
-################################################################################
 # add kernel module for networking stuff
 tee /etc/modules-load.d/k8s.conf <<EOL_MODULES
 overlay
