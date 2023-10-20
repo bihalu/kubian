@@ -50,6 +50,13 @@ if [ $? != 0 ] ; then
 fi
 
 ################################################################################
+# install yq
+yq --version 2>&1 /dev/null
+if [ $? != 0 ] ; then
+  wget https://github.com/mikefarah/yq/releases/download/v4.35.2/yq_linux_amd64 -O /usr/local/bin/yq && chmod +x /usr/local/bin/yq
+fi
+
+################################################################################
 # deb packages for airgap installation -> https://packages.debian.org
 # installed packages -> dpkg -l | sed '/^ii/!d' | tr -s ' ' | cut -d ' ' -f 2,3,4
 readarray -t PACKAGES <<EOL_PACKAGES
@@ -295,6 +302,13 @@ else
   wget https://github.com/projectcalico/cni-plugin/releases/download/v3.20.6/calico-amd64 -O artefact/calico
 fi
 
+# download yq -> https://github.com/mikefarah/yq/releases
+if [ -f artefact/yq ] ; then
+  echo "file exists artefact/yq" 
+else
+  wget https://github.com/mikefarah/yq/releases/download/v4.35.2/yq_linux_amd64 -O artefact/yq
+fi
+
 # issuer for cert-manager (letsencrypt) -> issuer-letsencrypt.yaml
 tee artefact/issuer-letsencrypt.yaml <<EOL_ISSUER
 apiVersion: cert-manager.io/v1
@@ -492,6 +506,10 @@ tar Cxzf /tmp artefact/k9s_Linux_amd64.tar.gz && cp /tmp/k9s /usr/local/bin/
 ################################################################################
 # install velero
 tar Cxzf /tmp artefact/velero-v1.12.0-linux-amd64.tar.gz && cp /tmp/velero-v1.12.0-linux-amd64/velero /usr/local/bin/
+
+################################################################################
+# install yq
+cp artefact/yq /usr/local/bin/yq && chmod 755 /usr/local/bin/yq
 
 ################################################################################
 # install calico cni-plugins
