@@ -532,7 +532,7 @@ if [ \$INIT = true ] ; then
 
   ################################################################################
   # init cluster
-  IP_ADDRESS=\$(ip -brief address show eth0 | awk '{print \$3}' | awk -F/ '{print \$1}')
+  IP_ADDRESS=\$(ip route | grep default | awk '{print \$3}')
   echo "controlPlaneEndpoint: \$IP_ADDRESS" >> artefact/kubeadm-config.yaml
 
   kubeadm init --upload-certs --node-name=\$HOSTNAME --config artefact/kubeadm-config.yaml
