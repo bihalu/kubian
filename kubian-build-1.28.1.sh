@@ -472,7 +472,7 @@ sed -e "/swap/ s/^/#/" -i /etc/fstab
 swapoff --all
 
 # prevent swap from being re-enabled via systemd
-systemctl mask dev-sda3.swap
+systemctl mask swap.target
 
 ################################################################################
 # install packages
