@@ -13,7 +13,7 @@ Change the following values in your configuration:
 * s3Url=<your_s3_endpoint>
 
 ```bash
-tee ~/.credentials-velero << EOL_VELERO
+tee ~/.credentials-velero <<EOL_VELERO
 [default]
 aws_access_key_id = admin
 aws_secret_access_key = topsecret
