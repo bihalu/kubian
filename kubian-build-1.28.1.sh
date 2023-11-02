@@ -657,10 +657,15 @@ if [ \$JOIN = true ] && [ \$WORKER = true ] ; then
     --create-namespace \
     --namespace openebs \
     --set mayastor.enabled=true \
+    --set mayastor.etcd.replicaCount=1 \
+    --reuse-values \
     --version 3.9.0
+  
+  # label node for mayastor usage
+  kubectl label node \$HOSTNAME openebs.io/engine=mayastor
 
   # set default storage class
-  #kubectl patch storageclass openebs-jiva-csi-default -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+  kubectl patch storageclass openebs-single-replica -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
 
   ################################################################################
   # install ingress-nginx controller
