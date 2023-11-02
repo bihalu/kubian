@@ -444,19 +444,15 @@ WORKER=false
 [ "\$2" = worker ] && WORKER=true
 
 ################################################################################
-# add kernel module for networking stuff
+# add kernel module for networking and disk stuff
 tee /etc/modules-load.d/k8s.conf <<EOL_MODULES
 overlay
 br_netfilter
+iscsi_tcp
+nvme-tcp
 EOL_MODULES
 
-################################################################################
-# add kernel module for iscsi
-tee /etc/modules-load.d/iscsi-tcp.conf <<EOL_ISCSI
-iscsi_tcp
-EOL_ISCSI
-
-modprobe --all overlay br_netfilter iscsi_tcp
+modprobe --all overlay br_netfilter iscsi_tcp nvme-tcp
 
 tee /etc/sysctl.d/kubernetes.conf <<EOL_SYSCTL
 net.bridge.bridge-nf-call-ip6tables = 1
