@@ -710,7 +710,11 @@ fi
 ################################################################################
 # delete
 if [ \$DELETE = true ] ; then
-  echo "delete not implemented"
+  echo "delete node \$HOSTNAME"
+  kubectl cordon node \$HOSTNAME
+  kubectl drain --ignore-daemonsets \$HOSTNAME
+  kubectl delete node \$HOSTNAME
+  kubeadm reset
 fi
 
 ################################################################################
