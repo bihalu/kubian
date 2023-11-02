@@ -658,6 +658,7 @@ if [ \$JOIN = true ] && [ \$WORKER = true ] ; then
     --namespace openebs \
     --set mayastor.enabled=true \
     --set mayastor.etcd.replicaCount=1 \
+    --set mayastor.etcd.persistence.storageClass=mayastor-etcd-localpv \
     --reuse-values \
     --version 3.9.0
   
