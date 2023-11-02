@@ -44,14 +44,14 @@ fi
 
 ################################################################################
 # install helm
-helm version 2>&1 > /dev/null
+which helm
 if [ $? != 0 ] ; then
   wget https://get.helm.sh/helm-v3.12.3-linux-amd64.tar.gz -O - | tar Cxzf /tmp - && cp /tmp/linux-amd64/helm /usr/local/bin/
 fi
 
 ################################################################################
 # install yq
-yq --version 2>&1 /dev/null
+which yq
 if [ $? != 0 ] ; then
   wget https://github.com/mikefarah/yq/releases/download/v4.35.2/yq_linux_amd64 -O /usr/local/bin/yq && chmod +x /usr/local/bin/yq
 fi
