@@ -714,7 +714,7 @@ if [ \$DELETE = true ] ; then
   kubectl cordon node \$HOSTNAME
   kubectl drain --ignore-daemonsets \$HOSTNAME
   kubectl delete node \$HOSTNAME
-  kubeadm reset
+  kubeadm reset --force
 fi
 
 ################################################################################
