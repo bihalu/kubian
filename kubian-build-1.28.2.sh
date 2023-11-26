@@ -157,7 +157,7 @@ readarray -t IMAGES <<EOL_IMAGES
 ################################################################################
 # kube-prometheus-stack v0.67.1 -> https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack/50.3.1
 quay.io/prometheus/node-exporter:v1.6.1
-quay.io/kiwigrid/k8s-sidecar:1.24.6
+quay.io/kiwigrid/k8s-sidecar:1.24.64.8.3
 docker.io/grafana/grafana:10.1.1
 registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.10.0
 quay.io/prometheus-operator/prometheus-operator:v0.67.1
@@ -179,10 +179,10 @@ quay.io/jetstack/cert-manager-acmesolver:v1.13.2
 quay.io/jetstack/cert-manager-ctl:v1.13.2
 quay.io/jetstack/cert-manager-webhook:v1.13.2
 ################################################################################
-# ingress-nginx v1.8.1 -> https://github.com/kubernetes/ingress-nginx/blob/helm-chart-4.7.1/charts/ingress-nginx/values.yaml#L26
-registry.k8s.io/ingress-nginx/controller:v1.8.1
-registry.k8s.io/ingress-nginx/opentelemetry:v20230527
-registry.k8s.io/ingress-nginx/kube-webhook-certgen:v20230407
+# ingress-nginx v1.9.4 -> https://github.com/kubernetes/ingress-nginx/blob/helm-chart-4.8.3/charts/ingress-nginx/values.yaml#L26
+registry.k8s.io/ingress-nginx/controller:v1.9.4
+registry.k8s.io/ingress-nginx/opentelemetry:v20230721-3e2062ee5
+registry.k8s.io/ingress-nginx/kube-webhook-certgen:v20231011-8b53cabe0
 registry.k8s.io/defaultbackend-amd64:1.5
 ################################################################################
 # metrics-server v0.6.4 -> https://artifacthub.io/packages/helm/metrics-server/metrics-server/3.11.0
@@ -244,7 +244,7 @@ readarray -t HELM_CHARTS <<EOL_HELM_CHARTS
 https://prometheus-community.github.io/helm-charts prometheus-community kube-prometheus-stack 50.3.1
 https://openebs.github.io/charts openebs openebs 3.9.0
 https://charts.jetstack.io jetstack cert-manager v1.13.2
-https://kubernetes.github.io/ingress-nginx ingress-nginx ingress-nginx 4.7.1
+https://kubernetes.github.io/ingress-nginx ingress-nginx ingress-nginx 4.8.3
 https://projectcalico.docs.tigera.io/charts projectcalico tigera-operator v3.26.1
 https://kubernetes-sigs.github.io/metrics-server metrics-server metrics-server 3.11.0
 EOL_HELM_CHARTS
@@ -598,10 +598,10 @@ if [ \$SINGLE = true ] ; then
 
   ################################################################################
   # install ingress-nginx controller
-  helm upgrade --install ingress-nginx helm/ingress-nginx-4.7.1.tgz \
+  helm upgrade --install ingress-nginx helm/ingress-nginx-4.8.3.tgz \
     --create-namespace \
     --namespace ingress-nginx \
-    --version 4.7.1 \
+    --version 4.8.3 \
     --set controller.service.type=NodePort \
     --set controller.service.nodePorts.http=30080 \
     --set controller.service.nodePorts.https=30443
@@ -679,10 +679,10 @@ if [ \$JOIN = true ] && [ \$WORKER = true ] ; then
 
   ################################################################################
   # install ingress-nginx controller
-  helm upgrade --install ingress-nginx helm/ingress-nginx-4.7.1.tgz \
+  helm upgrade --install ingress-nginx helm/ingress-nginx-4.8.3.tgz \
     --create-namespace \
     --namespace ingress-nginx \
-    --version 4.7.1 \
+    --version 4.8.3 \
     --set controller.service.type=NodePort \
     --set controller.service.nodePorts.http=30080 \
     --set controller.service.nodePorts.https=30443
