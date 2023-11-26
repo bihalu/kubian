@@ -155,14 +155,14 @@ done
 # ctr -n k8s.io images list -q
 readarray -t IMAGES <<EOL_IMAGES
 ################################################################################
-# kube-prometheus-stack v0.67.1 -> https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack/50.3.1
-quay.io/prometheus/node-exporter:v1.6.1
-quay.io/kiwigrid/k8s-sidecar:1.24.6
-docker.io/grafana/grafana:10.1.1
-registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.10.0
-quay.io/prometheus-operator/prometheus-operator:v0.67.1
+# kube-prometheus-stack v0.69.1 -> https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack/54.2.2
+quay.io/prometheus/node-exporter:v1.7.0
+quay.io/kiwigrid/k8s-sidecar:1.25.2
+docker.io/grafana/grafana:10.1.5
+registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.10.1
+quay.io/prometheus-operator/prometheus-operator:v0.69.1
 quay.io/prometheus/alertmanager:v0.26.0
-quay.io/prometheus/prometheus:v2.46.0
+quay.io/prometheus/prometheus:v2.48.0
 ################################################################################
 # openebs 3.9.0 -> https://artifacthub.io/packages/helm/openebs/openebs/3.9.0
 docker.io/openebs/node-disk-manager:2.1.0
@@ -241,7 +241,7 @@ ctr images export container/images.tar $CONTAINER_IMAGES
 ################################################################################
 # helm charts -> chart_url chart_repo chart_name chart_version
 readarray -t HELM_CHARTS <<EOL_HELM_CHARTS
-https://prometheus-community.github.io/helm-charts prometheus-community kube-prometheus-stack 50.3.1
+https://prometheus-community.github.io/helm-charts prometheus-community kube-prometheus-stack 54.2.2
 https://openebs.github.io/charts openebs openebs 3.9.0
 https://charts.jetstack.io jetstack cert-manager v1.13.2
 https://kubernetes.github.io/ingress-nginx ingress-nginx ingress-nginx 4.8.3
@@ -626,10 +626,10 @@ if [ \$SINGLE = true ] ; then
 
   ################################################################################
   # alertmanager, prometheus and grafana 
-  helm upgrade --install kube-prometheus-stack helm/kube-prometheus-stack-50.3.1.tgz \
+  helm upgrade --install kube-prometheus-stack helm/kube-prometheus-stack-54.2.2.tgz \
     --create-namespace \
     --namespace monitoring \
-    --version 50.3.1 \
+    --version 54.2.2 \
     --set alertmanager.service.type=NodePort \
     --set prometheus.service.type=NodePort \
     --set grafana.service.type=NodePort \
