@@ -46,7 +46,7 @@ fi
 # install helm
 which helm
 if [ $? != 0 ] ; then
-  wget https://get.helm.sh/helm-v3.12.3-linux-amd64.tar.gz -O - | tar Cxzf /tmp - && cp /tmp/linux-amd64/helm /usr/local/bin/
+  wget https://get.helm.sh/helm-v3.13.2-linux-amd64.tar.gz -O - | tar Cxzf /tmp - && cp /tmp/linux-amd64/helm /usr/local/bin/
 fi
 
 ################################################################################
@@ -278,11 +278,11 @@ done
 # additional artefacts
 mkdir -p artefact
 
-# download helm v3.12.3 -> https://github.com/helm/helm/releases/tag/v3.12.3
-if [ -f artefact/helm-v3.12.3-linux-amd64.tar.gz ] ; then
-  echo "file exists artefact/helm-v3.12.3-linux-amd64.tar.gz" 
+# download helm v3.13.2 -> https://github.com/helm/helm/releases/tag/v3.13.2
+if [ -f artefact/helm-v3.13.2-linux-amd64.tar.gz ] ; then
+  echo "file exists artefact/helm-v3.13.2-linux-amd64.tar.gz" 
 else
-  wget https://get.helm.sh/helm-v3.12.3-linux-amd64.tar.gz -P artefact
+  wget https://get.helm.sh/helm-v3.13.2-linux-amd64.tar.gz -P artefact
 fi
 
 # download k9s v0.28.2 -> https://github.com/derailed/k9s/releases/tag/v0.28.2
@@ -498,7 +498,7 @@ systemctl restart containerd
 
 ################################################################################
 # install helm
-tar Cxzf /tmp artefact/helm-v3.12.3-linux-amd64.tar.gz && cp /tmp/linux-amd64/helm /usr/local/bin/
+tar Cxzf /tmp artefact/helm-v3.13.2-linux-amd64.tar.gz && cp /tmp/linux-amd64/helm /usr/local/bin/
 
 ################################################################################
 # install k9s
