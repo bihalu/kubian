@@ -1,7 +1,7 @@
 #!/bin/bash
 
 NAME="kubian-setup"
-VERSION="1.28.4"
+VERSION="1.28.2"
 POD_NETWORK_CIDR="10.79.0.0/16"
 SVC_NETWORK_CIDR="10.80.0.0/12"
 CLUSTER_NAME="kubian"
@@ -83,9 +83,9 @@ conntrack 1:1.4.7-1+b2 amd64
 # cri-tools
 cri-tools 1.26.0-00 amd64
 # kubernetes
-kubeadm 1.28.4-00 amd64
-kubectl 1.28.4-00 amd64
-kubelet 1.28.4-00 amd64
+kubeadm 1.28.2-00 amd64
+kubectl 1.28.2-00 amd64
+kubelet 1.28.2-00 amd64
 kubernetes-cni 1.2.0-00 amd64
 # containerd
 containerd 1.6.20~ds1-1+b1 amd64
