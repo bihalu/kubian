@@ -53,7 +53,7 @@ fi
 # install yq
 which yq
 if [ $? != 0 ] ; then
-  wget https://github.com/mikefarah/yq/releases/download/v4.35.2/yq_linux_amd64 -O /usr/local/bin/yq && chmod +x /usr/local/bin/yq
+  wget https://github.com/mikefarah/yq/releases/download/v4.40.3/yq_linux_amd64 -O /usr/local/bin/yq && chmod +x /usr/local/bin/yq
 fi
 
 ################################################################################
@@ -310,7 +310,7 @@ fi
 if [ -f artefact/yq ] ; then
   echo "file exists artefact/yq" 
 else
-  wget https://github.com/mikefarah/yq/releases/download/v4.35.2/yq_linux_amd64 -O artefact/yq
+  wget https://github.com/mikefarah/yq/releases/download/v4.40.3/yq_linux_amd64 -O artefact/yq
 fi
 
 # issuer for cert-manager (letsencrypt) -> issuer-letsencrypt.yaml
