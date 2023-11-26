@@ -152,6 +152,7 @@ done
 
 ################################################################################
 # container images for airgap installation
+# ctr -n k8s.io images list -q
 readarray -t IMAGES <<EOL_IMAGES
 ################################################################################
 # kube-prometheus-stack v0.67.1 -> https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack/50.3.1
@@ -170,13 +171,13 @@ docker.io/openebs/node-disk-operator:2.1.0
 docker.io/openebs/node-disk-exporter:2.1.0
 docker.io/openebs/linux-utils:3.4.0
 ################################################################################
-# cert-manager 1.12.4 -> https://artifacthub.io/packages/helm/cert-manager/cert-manager/1.12.4
-quay.io/jetstack/cert-manager-cainjector:v1.12.4
-quay.io/jetstack/cert-manager-controller:v1.12.4
-quay.io/jetstack/cert-manager-webhook:v1.12.4
-quay.io/jetstack/cert-manager-acmesolver:v1.12.4
-quay.io/jetstack/cert-manager-ctl:v1.12.4
-quay.io/jetstack/cert-manager-webhook:v1.12.4
+# cert-manager 1.13.2 -> https://artifacthub.io/packages/helm/cert-manager/cert-manager/1.13.2
+quay.io/jetstack/cert-manager-cainjector:v1.13.2
+quay.io/jetstack/cert-manager-controller:v1.13.2
+quay.io/jetstack/cert-manager-webhook:v1.13.2
+quay.io/jetstack/cert-manager-acmesolver:v1.13.2
+quay.io/jetstack/cert-manager-ctl:v1.13.2
+quay.io/jetstack/cert-manager-webhook:v1.13.2
 ################################################################################
 # ingress-nginx v1.8.1 -> https://github.com/kubernetes/ingress-nginx/blob/helm-chart-4.7.1/charts/ingress-nginx/values.yaml#L26
 registry.k8s.io/ingress-nginx/controller:v1.8.1
@@ -198,11 +199,11 @@ docker.io/calico/node:v3.26.1
 docker.io/calico/pod2daemon-flexvol:v3.26.1
 docker.io/calico/typha:v3.26.1
 ################################################################################
-# k8s 1.28.4 -> https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.28.md#container-images
-registry.k8s.io/kube-apiserver:v1.28.4
-registry.k8s.io/kube-controller-manager:v1.28.4
-registry.k8s.io/kube-proxy:v1.28.4
-registry.k8s.io/kube-scheduler:v1.28.4
+# k8s 1.28.2 -> https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.28.md#container-images
+registry.k8s.io/kube-apiserver:v1.28.2
+registry.k8s.io/kube-controller-manager:v1.28.2
+registry.k8s.io/kube-proxy:v1.28.2
+registry.k8s.io/kube-scheduler:v1.28.2
 registry.k8s.io/coredns/coredns:v1.10.1
 registry.k8s.io/etcd:3.5.9-0
 registry.k8s.io/pause:3.9
@@ -242,7 +243,7 @@ ctr images export container/images.tar $CONTAINER_IMAGES
 readarray -t HELM_CHARTS <<EOL_HELM_CHARTS
 https://prometheus-community.github.io/helm-charts prometheus-community kube-prometheus-stack 50.3.1
 https://openebs.github.io/charts openebs openebs 3.9.0
-https://charts.jetstack.io jetstack cert-manager v1.12.4
+https://charts.jetstack.io jetstack cert-manager v1.13.2
 https://kubernetes.github.io/ingress-nginx ingress-nginx ingress-nginx 4.7.1
 https://projectcalico.docs.tigera.io/charts projectcalico tigera-operator v3.26.1
 https://kubernetes-sigs.github.io/metrics-server metrics-server metrics-server 3.11.0
@@ -607,10 +608,10 @@ if [ \$SINGLE = true ] ; then
 
   ################################################################################
   # install cert-manager
-  helm upgrade --install cert-manager helm/cert-manager-v1.12.4.tgz \
+  helm upgrade --install cert-manager helm/cert-manager-v1.13.2.tgz \
     --create-namespace \
     --namespace cert-manager \
-    --version v1.12.4 \
+    --version v1.13.2 \
     --set installCRDs=true
 
   kubectl apply -f artefact/issuer-letsencrypt.yaml
@@ -688,10 +689,10 @@ if [ \$JOIN = true ] && [ \$WORKER = true ] ; then
 
   ################################################################################
   # install cert-manager
-  helm upgrade --install cert-manager helm/cert-manager-v1.12.4.tgz \
+  helm upgrade --install cert-manager helm/cert-manager-v1.13.2.tgz \
     --create-namespace \
     --namespace cert-manager \
-    --version v1.12.4 \
+    --version v1.13.2 \
     --set installCRDs=true
 
   kubectl apply -f artefact/issuer-letsencrypt.yaml
