@@ -157,7 +157,7 @@ readarray -t IMAGES <<EOL_IMAGES
 ################################################################################
 # kube-prometheus-stack v0.67.1 -> https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack/50.3.1
 quay.io/prometheus/node-exporter:v1.6.1
-quay.io/kiwigrid/k8s-sidecar:1.24.64.8.3
+quay.io/kiwigrid/k8s-sidecar:1.24.6
 docker.io/grafana/grafana:10.1.1
 registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.10.0
 quay.io/prometheus-operator/prometheus-operator:v0.67.1
