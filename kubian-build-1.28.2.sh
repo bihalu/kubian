@@ -151,6 +151,10 @@ for PACKAGE in "${PACKAGES[@]}" ; do
 done
 
 ################################################################################
+# charm https://charm.sh/ gum https://github.com/charmbracelet/gum
+wget https://github.com/charmbracelet/gum/releases/download/v0.11.0/gum_0.11.0_amd64.deb -P deb
+
+################################################################################
 # container images for airgap installation
 # ctr -n k8s.io images list -q
 readarray -t IMAGES <<EOL_IMAGES
@@ -418,35 +422,68 @@ tee setup.sh <<EOL_SETUP
 
 SETUP_START=\$(date +%s)
 
-################################################################################
-# specific setup routines for:
-# - init cluster
-# - init single
-# - join controlplane
-# - join worker
-# - upgrade 
-# - delete
 echo "setup \$1 \$2 \$3"
+
+################################################################################
+# install packages
+PACKAGES=\$(find deb -name "*.deb")
+dpkg --install \$PACKAGES
+
+################################################################################
+# specific setup routines
+if [ -z "\$1" ] ; then
+  gum style \
+    --foreground 212 --border-foreground 212 --border rounded \
+    --align center --width 30 --margin "1 1" --padding "1 1" \
+    'kubian 1.28.2 setup' 'select operation?'
+  ARG1=\$(gum choose "init" "join" "upgrade" "delete")
+else
+  ARG1="\$1"
+fi
 
 INIT=false
 JOIN=false
 UPGRADE=false
 DELETE=false
 
-[ "\$1" = init ] && INIT=true
-[ "\$1" = join ] && JOIN=true
-[ "\$1" = upgrade ] && UPGRADE=true
-[ "\$1" = delete ] && DELETE=true
+[ "\$ARG1" = init ] && INIT=true
+[ "\$ARG1" = join ] && JOIN=true
+[ "\$ARG1" = upgrade ] && UPGRADE=true
+[ "\$ARG1" = delete ] && DELETE=true
+
+if [ -z "\$2" ] ; then
+  # init single or cluster
+  if [ \$INIT = true ] ; then
+    gum style \
+      --foreground 212 --border-foreground 212 --border rounded \
+      --align center --width 30 --margin "1 1" --padding "1 1" \
+      'initialize cluster' 'single node or cluster?'
+    ARG2=\$(gum choose "single" "cluster")
+  fi
+
+  # join worker or controlplane
+  if [ \$JOIN = true ] ; then
+    gum style \
+      --foreground 212 --border-foreground 212 --border rounded \
+      --align center --width 30 --margin "1 1" --padding "1 1" \
+      'join node' 'worker or controlplane?'
+    ARG2=\$(gum choose "worker" "controlplane")
+    ARG3=\$(gum input --placeholder "ip of first controlplane")
+  fi
+else
+  ARG2="\$2"
+  ARG3="\$3"
+fi
 
 CLUSTER=false
 SINGLE=false
 CONTROLPLANE=false
 WORKER=false
 
-[ "\$2" = cluster ] && CLUSTER=true
-[ "\$2" = single ] && SINGLE=true
-[ "\$2" = controlplane ] && CONTROLPLANE=true
-[ "\$2" = worker ] && WORKER=true
+[ "\$ARG2" = cluster ] && CLUSTER=true
+[ "\$ARG2" = single ] && SINGLE=true
+[ "\$ARG2" = controlplane ] && CONTROLPLANE=true
+[ "\$ARG2" = worker ] && WORKER=true
 
 ################################################################################
 # add kernel module for networking and disk stuff
@@ -475,11 +512,6 @@ swapoff --all
 
 # prevent swap from being re-enabled via systemd
 systemctl mask swap.target
-
-################################################################################
-# install packages
-PACKAGES=\$(find deb -name "*.deb")
-dpkg --install \$PACKAGES
 
 ################################################################################
 # enable iscsid service
@@ -649,14 +681,14 @@ fi
 ################################################################################
 # join worker
 if [ \$JOIN = true ] && [ \$WORKER = true ] ; then
-  ssh -oBatchMode=yes -q \$3 exit
+  ssh -oBatchMode=yes -q \$ARG3 exit
   if [ \$? = 0 ] ; then
     mkdir -p ~/.kube
-    scp \$3:~/.kube/config ~/.kube/config
-    JOIN_WORKER=\$(ssh -oBatchMode=yes \$3 kubeadm token create --print-join-command)
+    scp \$ARG3:~/.kube/config ~/.kube/config
+    JOIN_WORKER=\$(ssh -oBatchMode=yes \$ARG3 kubeadm token create --print-join-command)
     eval \$JOIN_WORKER
   else
-    echo "ERROR: can't connect to \$3 via ssh"
+    echo "ERROR: can't connect to \$ARG3 via ssh"
     exit 1
   fi
 
@@ -709,15 +741,15 @@ fi
 ################################################################################
 # join controlplane
 if [ \$JOIN = true ] && [ \$CONTROLPLANE = true ] ; then
-  ssh -oBatchMode=yes -q \$3 exit
+  ssh -oBatchMode=yes -q \$ARG3 exit
   if [ \$? = 0 ] ; then
     mkdir -p ~/.kube
-    scp \$3:~/.kube/config ~/.kube/config
-    CERTIFICATE_KEY=\$(ssh -oBatchMode=yes \$3 kubeadm init phase upload-certs --upload-certs | tail -1)
-    JOIN_CONTROLPLANE=\$(ssh -oBatchMode=yes \$3 kubeadm token create --print-join-command --certificate-key \$CERTIFICATE_KEY)
+    scp \$ARG3:~/.kube/config ~/.kube/config
+    CERTIFICATE_KEY=\$(ssh -oBatchMode=yes \$ARG3 kubeadm init phase upload-certs --upload-certs | tail -1)
+    JOIN_CONTROLPLANE=\$(ssh -oBatchMode=yes \$ARG3 kubeadm token create --print-join-command --certificate-key \$CERTIFICATE_KEY)
     eval \$JOIN_CONTROLPLANE
   else
-    echo "ERROR: can't connect to \$3 via ssh"
+    echo "ERROR: can't connect to \$ARG3 via ssh"
     exit 1
   fi
 fi
