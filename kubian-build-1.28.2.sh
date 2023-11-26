@@ -184,6 +184,9 @@ registry.k8s.io/ingress-nginx/opentelemetry:v20230527
 registry.k8s.io/ingress-nginx/kube-webhook-certgen:v20230407
 registry.k8s.io/defaultbackend-amd64:1.5
 ################################################################################
+# metrics-server v0.6.4 -> https://artifacthub.io/packages/helm/metrics-server/metrics-server/3.11.0
+registry.k8s.io/metrics-server/metrics-server:v0.6.4
+################################################################################
 # calico v3.26.1 -> https://artifacthub.io/packages/helm/projectcalico/tigera-operator/3.26.1
 quay.io/tigera/operator:v1.30.4
 docker.io/calico/apiserver:v3.26.1
@@ -242,6 +245,7 @@ https://openebs.github.io/charts openebs openebs 3.9.0
 https://charts.jetstack.io jetstack cert-manager v1.12.4
 https://kubernetes.github.io/ingress-nginx ingress-nginx ingress-nginx 4.7.1
 https://projectcalico.docs.tigera.io/charts projectcalico tigera-operator v3.26.1
+https://kubernetes-sigs.github.io/metrics-server metrics-server metrics-server 3.11.0
 EOL_HELM_CHARTS
 
 mkdir -p helm/
@@ -612,6 +616,14 @@ if [ \$SINGLE = true ] ; then
   kubectl apply -f artefact/issuer-letsencrypt.yaml
 
   ################################################################################
+  # install metrics-server 3.11.0
+  helm upgrade --install metrics-server helm/metrics-server-3.11.0.tgz \
+    --create-namespace \
+    --namespace monitoring \
+    --version 3.11.0 \
+    --set args="{--kubelet-insecure-tls}"
+
+  ################################################################################
   # alertmanager, prometheus and grafana 
   helm upgrade --install kube-prometheus-stack helm/kube-prometheus-stack-50.3.1.tgz \
     --create-namespace \
@@ -683,6 +695,14 @@ if [ \$JOIN = true ] && [ \$WORKER = true ] ; then
     --set installCRDs=true
 
   kubectl apply -f artefact/issuer-letsencrypt.yaml
+
+  ################################################################################
+  # install metrics-server 3.11.0
+  helm upgrade --install metrics-server helm/metrics-server-3.11.0.tgz \
+    --create-namespace \
+    --namespace monitoring \
+    --version 3.11.0 \
+    --set args="{--kubelet-insecure-tls}"
 fi
 
 ################################################################################
