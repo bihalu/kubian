@@ -85,7 +85,7 @@ cri-tools 1.28.0-1.1 amd64
 kubeadm 1.28.2-1.1 amd64
 kubectl 1.28.2-1.1 amd64
 kubelet 1.28.2-1.1 amd64
-kubernetes-cni 1.2.0-00 amd64
+kubernetes-cni 1.2.0-2.1 amd64
 # containerd
 containerd 1.6.20~ds1-1+b1 amd64
 criu 3.17.1-2 amd64
