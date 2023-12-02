@@ -13,13 +13,12 @@ BUILD_START=$(date +%s)
 apt install -y aptitude apt-transport-https gpg wget
 
 ################################################################################
-# add kubernetes repository and import google gpg key
+# add kubernetes community package repository and import gpg key
 tee /etc/apt/sources.list.d/kubernetes.list <<EOL_KUBERNETES_REPO
-deb http://apt.kubernetes.io/ kubernetes-xenial main
-# deb-src http://apt.kubernetes.io/ kubernetes-xenial main
+deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /
 EOL_KUBERNETES_REPO
 
-wget https://packages.cloud.google.com/apt/doc/apt-key.gpg -O - | gpg --batch --yes --dearmour --output /etc/apt/trusted.gpg.d/cgoogle.gpg
+wget https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key -O - | gpg --batch --yes --dearmor --output /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
 apt update
 
@@ -30,7 +29,7 @@ apt install -y containerd
 # configure containerd
 containerd config default | tee /etc/containerd/config.toml
 
-# fix config pause container use same version as kubernetes
+# fix config pause container (use same version as kubernetes)
 sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml
 
 # fix systemd cgroup (use cgroup v1)
@@ -120,7 +119,7 @@ wireguard 1.0.20210914-1 all
 wireguard-tools 1.0.20210914-1+b1 amd64
 EOL_PACKAGES
 
-mkdir -p deb/
+mkdir -p deb
 
 aptitude clean
 
@@ -151,7 +150,7 @@ for PACKAGE in "${PACKAGES[@]}" ; do
 done
 
 ################################################################################
-# charm https://charm.sh/ gum https://github.com/charmbracelet/gum
+# download gum package -> https://github.com/charmbracelet/gum
 wget https://github.com/charmbracelet/gum/releases/download/v0.11.0/gum_0.11.0_amd64.deb -P deb
 
 ################################################################################
@@ -253,7 +252,7 @@ https://projectcalico.docs.tigera.io/charts projectcalico tigera-operator v3.26.
 https://kubernetes-sigs.github.io/metrics-server metrics-server metrics-server 3.11.0
 EOL_HELM_CHARTS
 
-mkdir -p helm/
+mkdir -p helm
 
 for CHART in "${HELM_CHARTS[@]}" ; do
   # don't process commented out helm charts
@@ -304,7 +303,7 @@ else
   wget https://github.com/vmware-tanzu/velero/releases/download/v1.12.0/velero-v1.12.0-linux-amd64.tar.gz -P artefact
 fi
 
-# download calico cni-plugin v3.20.6 -> calico
+# download calico cni-plugin v3.20.6 -> https://github.com/projectcalico/cni-plugin/releases/
 if [ -f artefact/calico ] ; then
   echo "file exists artefact/calico" 
 else
@@ -422,15 +421,13 @@ tee setup.sh <<EOL_SETUP
 
 SETUP_START=\$(date +%s)
 
-echo "setup \$1 \$2 \$3"
-
 ################################################################################
 # install packages
 PACKAGES=\$(find deb -name "*.deb")
 dpkg --install \$PACKAGES
 
 ################################################################################
-# specific setup routines
+# specific setup routines: init, join, upgrade or delete
 if [ -z "\$1" ] ; then
   gum style \
     --foreground 212 --border-foreground 212 --border rounded \
@@ -452,7 +449,7 @@ DELETE=false
 [ "\$ARG1" = delete ] && DELETE=true
 
 if [ -z "\$2" ] ; then
-  # init single or cluster
+  # init arguments: single or cluster
   if [ \$INIT = true ] ; then
     gum style \
       --foreground 212 --border-foreground 212 --border rounded \
@@ -461,14 +458,14 @@ if [ -z "\$2" ] ; then
     ARG2=\$(gum choose "single" "cluster")
   fi
 
-  # join worker or controlplane
+  # join arguments: worker or controlplane and primary controlplane ip
   if [ \$JOIN = true ] ; then
     gum style \
       --foreground 212 --border-foreground 212 --border rounded \
       --align center --width 30 --margin "1 1" --padding "1 1" \
       'join node' 'worker or controlplane?'
     ARG2=\$(gum choose "worker" "controlplane")
-    ARG3=\$(gum input --placeholder "ip of first controlplane")
+    ARG3=\$(gum input --placeholder "ip of primary control plane")
   fi
 else
   ARG2="\$2"
@@ -521,7 +518,7 @@ systemctl enable --now iscsid
 # containerd config
 containerd config default | tee /etc/containerd/config.toml
 
-# fix config pause container use same version as kubernetes
+# fix config pause container (use same version as kubernetes)
 sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml
 
 # fix systemd cgroup (use cgroup v1)
@@ -560,7 +557,7 @@ echo "Be patient import container images ..."
 ctr --namespace k8s.io images import container/images.tar
 
 ################################################################################
-# init
+# init kubernetes cluster -> primary control plane
 if [ \$INIT = true ] ; then
   echo "init kubernetes cluster ..."
 
@@ -580,9 +577,9 @@ if [ \$INIT = true ] ; then
 fi
 
 ################################################################################
-# cluster
+# cluster settings -> install cni calico 
 if [ \$CLUSTER = true ] ; then
-  echo "init cluster settings"
+  echo "cluster settings"
 
   ################################################################################
   # install projectcalico tigera-operator v3.26.4
@@ -598,9 +595,9 @@ if [ \$CLUSTER = true ] ; then
 fi
 
 ################################################################################
-# single
+# single node cluster
 if [ \$SINGLE = true ] ; then
-  echo "single node cluster settings"
+  echo "single node cluster"
 
   ################################################################################
   # remove no schedule taint for control plane
