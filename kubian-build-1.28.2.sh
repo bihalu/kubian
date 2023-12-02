@@ -754,7 +754,17 @@ fi
 ################################################################################
 # upgrade
 if [ \$UPGRADE = true ] ; then
-  echo "upgrade not implemented"
+  echo "upgrade first contol plane node"
+  systemctl restart kubelet
+
+  # give grace period of 1 minute to get node ready
+  kubectl wait --timeout=1m --for=condition=Ready node/\$HOSTNAME
+  [ \$? != 0 ] && echo "ERROR: can't upgrade control plane" && exit 1
+
+  kubeadm upgrade apply $VERSION --yes
+
+  # TODO check node to upgrade -> primary control plane, additional control plane or worker node 
+  # https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/
 fi
 
 ################################################################################
