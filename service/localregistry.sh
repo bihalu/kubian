@@ -18,7 +18,12 @@ fi
 ############################################################
 # start
 if [ "$1" = "start" ] ; then
-  /usr/bin/ctr run --net-host --detach docker.io/library/registry:2 localregistry
+  /usr/bin/ctr run \
+    --net-host \
+    --detach \
+    --mount type=bind,src=/usr/local/registry,dst=/data,options=rbind:rw \
+    --env REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/data \
+    docker.io/library/registry:2 localregistry
   if [ $? -ne 0 ] ; then
     exit $?
   fi
@@ -60,6 +65,7 @@ if [ "$1" = "add" ] ; then
   EOL_LOCALREGISTRY_SERVICE
 
   cp $0 /etc/systemd/system/
+  mkdir -p /usr/local/registry
   systemctl daemon-reload
 fi
 
