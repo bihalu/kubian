@@ -7,6 +7,7 @@ SVC_NETWORK_CIDR="10.80.0.0/12"
 CLUSTER_NAME="kubian"
 EMAIL="john.doe@inter.net"
 BUILD_START=$(date +%s)
+SUPRESS_OUTPUT="2>&1 > /dev/null"
 
 ################################################################################
 # install aptitude apt-transport-https gpg wget
@@ -33,7 +34,6 @@ containerd config default | tee /etc/containerd/config.toml
 sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml
 
 # fix systemd cgroup (use cgroup v2)
-sed -i 's/systemd_cgroup = false/systemd_cgroup = true/' /etc/containerd/config.toml
 sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
 
 systemctl restart containerd
@@ -493,48 +493,47 @@ WORKER=false
 
 ################################################################################
 # add kernel module for networking and disk stuff
-tee /etc/modules-load.d/k8s.conf <<EOL_MODULES
+tee /etc/modules-load.d/k8s.conf <<EOL_MODULES $SUPRESS_OUTPUT
 overlay
 br_netfilter
 iscsi_tcp
 nvme-tcp
 EOL_MODULES
 
-modprobe --all overlay br_netfilter iscsi_tcp nvme-tcp
+modprobe --all overlay br_netfilter iscsi_tcp nvme-tcp $SUPRESS_OUTPUT
 
-tee /etc/sysctl.d/kubernetes.conf <<EOL_SYSCTL
+tee /etc/sysctl.d/kubernetes.conf <<EOL_SYSCTL $SUPRESS_OUTPUT
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
 net.ipv4.ip_forward = 1
 vm.nr_hugepages = 1024
 EOL_SYSCTL
 
-sysctl --system
+sysctl --system $SUPRESS_OUTPUT
 
 ################################################################################
 # disable swap
-sed -e "/swap/ s/^/#/" -i /etc/fstab
-swapoff --all
+sed -e "/swap/ s/^/#/" -i /etc/fstab $SUPRESS_OUTPUT
+swapoff --all $SUPRESS_OUTPUT
 
 # prevent swap from being re-enabled via systemd
-systemctl mask swap.target
+systemctl mask swap.target $SUPRESS_OUTPUT
 
 ################################################################################
 # enable iscsid service
-systemctl enable --now iscsid
+systemctl enable --now iscsid $SUPRESS_OUTPUT
 
 ################################################################################
 # containerd config
-containerd config default | tee /etc/containerd/config.toml
+containerd config default | tee /etc/containerd/config.toml $SUPRESS_OUTPUT
 
 # fix config pause container (use same version as kubernetes)
-sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml
+sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml $SUPRESS_OUTPUT
 
 # fix systemd cgroup (use cgroup v2)
-sed -i 's/systemd_cgroup = false/systemd_cgroup = true/' /etc/containerd/config.toml
-sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
+sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml $SUPRESS_OUTPUT
 
-systemctl restart containerd
+systemctl restart containerd $SUPRESS_OUTPUT
 
 ################################################################################
 # install helm
