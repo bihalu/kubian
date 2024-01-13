@@ -32,8 +32,8 @@ containerd config default | tee /etc/containerd/config.toml
 # fix config pause container (use same version as kubernetes)
 sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml
 
-# fix systemd cgroup (use cgroup v1)
-#sed -i 's/systemd_cgroup = true/systemd_cgroup = false/' /etc/containerd/config.toml
+# fix systemd cgroup (use cgroup v2)
+sed -i 's/systemd_cgroup = false/systemd_cgroup = true/' /etc/containerd/config.toml
 
 systemctl restart containerd
 if [ $? != 0 ] ; then
@@ -432,7 +432,7 @@ dpkg --install deb/gum_0.11.0_amd64.deb 2>&1 > /dev/null
 ################################################################################
 # install packages
 PACKAGES=\$(find deb -name "*.deb")
-gum spin --title "Installing packages ..." -- dpkg --install \$PACKAGES
+gum spin --title "Install packages ..." -- dpkg --install \$PACKAGES
 
 ################################################################################
 # specific setup routines: init, join, upgrade or delete
@@ -492,16 +492,16 @@ WORKER=false
 
 ################################################################################
 # add kernel module for networking and disk stuff
-tee /etc/modules-load.d/k8s.conf <<EOL_MODULES
+gum spin --title "Add kernel modules ..." -- tee /etc/modules-load.d/k8s.conf <<EOL_MODULES
 overlay
 br_netfilter
 iscsi_tcp
 nvme-tcp
 EOL_MODULES
 
-modprobe --all overlay br_netfilter iscsi_tcp nvme-tcp
+gum spin --title "Load kernel modules ..." -- modprobe --all overlay br_netfilter iscsi_tcp nvme-tcp
 
-tee /etc/sysctl.d/kubernetes.conf <<EOL_SYSCTL
+gum spin --title "Set kernel attributes ..." -- tee /etc/sysctl.d/kubernetes.conf <<EOL_SYSCTL
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
 net.ipv4.ip_forward = 1
@@ -529,8 +529,8 @@ containerd config default | tee /etc/containerd/config.toml
 # fix config pause container (use same version as kubernetes)
 sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml
 
-# fix systemd cgroup (use cgroup v1)
-#sed -i 's/systemd_cgroup = true/systemd_cgroup = false/' /etc/containerd/config.toml
+# fix systemd cgroup (use cgroup v2)
+sed -i 's/systemd_cgroup = false/systemd_cgroup = true/' /etc/containerd/config.toml
 
 systemctl restart containerd
 
