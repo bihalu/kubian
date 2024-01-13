@@ -426,6 +426,10 @@ tee setup.sh <<EOL_SETUP
 SETUP_START=\$(date +%s)
 
 ################################################################################
+# install gum (silent ;-)
+dpkg --install deb/gum_0.11.0_amd64.deb 2>&1 > /dev/null
+
+################################################################################
 # install packages
 PACKAGES=\$(find deb -name "*.deb")
 gum spin --title "Installing packages ..." -- dpkg --install \$PACKAGES
