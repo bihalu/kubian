@@ -395,6 +395,10 @@ EOL_PROM_VALUES
 
 # kubeadm-config.yaml -> https://kubernetes.io/docs/reference/config-api/kubeadm-config.v1beta3/
 tee artefact/kubeadm-config.yaml <<EOL_KUBEADM_CONFIG
+kind: KubeletConfiguration
+apiVersion: kubelet.config.k8s.io/v1beta1
+cgroupDriver: systemd      
+---
 kind: ClusterConfiguration
 apiVersion: kubeadm.k8s.io/v1beta3
 clusterName: $CLUSTER_NAME
@@ -412,10 +416,6 @@ etcd:
   local:
     extraArgs:
       listen-metrics-urls: "http://0.0.0.0:2381"
----
-kind: KubeletConfiguration
-apiVersion: kubelet.config.k8s.io/v1beta1
-cgroupDriver: systemd      
 EOL_KUBEADM_CONFIG
 
 ################################################################################
@@ -428,7 +428,7 @@ SETUP_START=\$(date +%s)
 ################################################################################
 # install packages
 PACKAGES=\$(find deb -name "*.deb")
-dpkg --install \$PACKAGES
+gum spin --title "Installing packages ..." -- dpkg --install \$PACKAGES
 
 ################################################################################
 # specific setup routines: init, join, upgrade or delete
@@ -436,7 +436,7 @@ if [ -z "\$1" ] ; then
   gum style \
     --foreground 212 --border-foreground 212 --border rounded \
     --align center --width 30 --margin "1 1" --padding "1 1" \
-    'kubian 1.28.2 setup' 'select operation?'
+    'kubian $VERSION setup' 'select operation?'
   ARG1=\$(gum choose "init" "join" "upgrade" "delete")
 else
   ARG1="\$1"
