@@ -434,7 +434,7 @@ dpkg --install deb/gum_0.11.0_amd64.deb 2>&1 > /dev/null
 # install packages
 PACKAGES=\$(find deb -name "*.deb")
 gum spin --title "Install packages ..." -- dpkg --install \$PACKAGES
-echo 'Install packages ..."
+echo "Install packages ..."
 
 ################################################################################
 # specific setup routines: init, join, upgrade or delete
