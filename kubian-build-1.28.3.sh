@@ -34,6 +34,7 @@ sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml
 
 # fix systemd cgroup (use cgroup v2)
 sed -i 's/systemd_cgroup = false/systemd_cgroup = true/' /etc/containerd/config.toml
+sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
 
 systemctl restart containerd
 if [ $? != 0 ] ; then
@@ -492,16 +493,16 @@ WORKER=false
 
 ################################################################################
 # add kernel module for networking and disk stuff
-gum spin --title "Add kernel modules ..." -- tee /etc/modules-load.d/k8s.conf <<EOL_MODULES
+tee /etc/modules-load.d/k8s.conf <<EOL_MODULES
 overlay
 br_netfilter
 iscsi_tcp
 nvme-tcp
 EOL_MODULES
 
-gum spin --title "Load kernel modules ..." -- modprobe --all overlay br_netfilter iscsi_tcp nvme-tcp
+modprobe --all overlay br_netfilter iscsi_tcp nvme-tcp
 
-gum spin --title "Set kernel attributes ..." -- tee /etc/sysctl.d/kubernetes.conf <<EOL_SYSCTL
+tee /etc/sysctl.d/kubernetes.conf <<EOL_SYSCTL
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
 net.ipv4.ip_forward = 1
@@ -531,6 +532,7 @@ sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml
 
 # fix systemd cgroup (use cgroup v2)
 sed -i 's/systemd_cgroup = false/systemd_cgroup = true/' /etc/containerd/config.toml
+sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
 
 systemctl restart containerd
 
@@ -561,8 +563,7 @@ systemctl enable kubelet
 
 ################################################################################
 # import container images
-echo "Be patient import container images ..."
-ctr --namespace k8s.io images import container/images.tar
+gum spin --title "Import container images ..." -- ctr --namespace k8s.io images import container/images.tar
 
 ################################################################################
 # init kubernetes cluster -> primary control plane
