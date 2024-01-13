@@ -434,6 +434,7 @@ dpkg --install deb/gum_0.11.0_amd64.deb 2>&1 > /dev/null
 # install packages
 PACKAGES=\$(find deb -name "*.deb")
 gum spin --title "Install packages ..." -- dpkg --install \$PACKAGES
+echo 'Install packages ..."
 
 ################################################################################
 # specific setup routines: init, join, upgrade or delete
@@ -517,11 +518,11 @@ sed -e "/swap/ s/^/#/" -i /etc/fstab $SUPRESS_OUTPUT
 swapoff --all $SUPRESS_OUTPUT
 
 # prevent swap from being re-enabled via systemd
-systemctl mask swap.target $SUPRESS_OUTPUT
+systemctl mask swap.target
 
 ################################################################################
 # enable iscsid service
-systemctl enable --now iscsid $SUPRESS_OUTPUT
+systemctl enable --now iscsid
 
 ################################################################################
 # containerd config
@@ -810,8 +811,8 @@ echo "Be patient creating self extracting archive ..."
 tar -czf $TAR_FILE  setup.sh deb/ container/ artefact/ helm/
 
 echo '#!/bin/bash' > $SELF_EXTRACTABLE
-echo 'echo Be patient extracting archive ...' >> $SELF_EXTRACTABLE
-echo 'dd bs=`head -5 $0 | wc -c` skip=1 if=$0 | gunzip -c | tar -x' >> $SELF_EXTRACTABLE
+echo 'echo Extract archive ...' >> $SELF_EXTRACTABLE
+echo 'dd bs=`head -5 $0 | wc -c` skip=1 if=$0 | gunzip -c | tar -x 2>&1 > /dev/null' >> $SELF_EXTRACTABLE
 echo 'exec ./setup.sh $1 $2 $3' >> $SELF_EXTRACTABLE
 echo '######################################################################' >> $SELF_EXTRACTABLE
 
