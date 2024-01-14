@@ -442,7 +442,7 @@ echo "Install packages ..."
 if [ -z "\$1" ] ; then
   gum style \
     --foreground 212 --border-foreground 212 --border rounded \
-    --align center --width 30 --margin "1 1" --padding "1 1" \
+    --align center --margin "1 1" --padding "1 1" \
     'kubian $VERSION setup' 'select setup routine?'
   ARG1=\$(gum choose "init" "join" "upgrade" "delete")
 else
@@ -466,8 +466,8 @@ if [ -z "\$2" ] ; then
   if [ \$INIT = true ] ; then
     gum style \
       --foreground 212 --border-foreground 212 --border rounded \
-      --align center --width 30 --margin "1 1" --padding "1 1" \
-      'initialize cluster' 'single node or cluster?'
+      --align center --margin "1 1" --padding "1 1" \
+      'initialize kubernetes' 'select single node or cluster?'
     ARG2=\$(gum choose "single" "cluster")
   fi
 
@@ -475,8 +475,8 @@ if [ -z "\$2" ] ; then
   if [ \$JOIN = true ] ; then
     gum style \
       --foreground 212 --border-foreground 212 --border rounded \
-      --align center --width 30 --margin "1 1" --padding "1 1" \
-      'join node' 'worker or controlplane?'
+      --align center --margin "1 1" --padding "1 1" \
+      'join node' 'select worker or controlplane?'
     ARG2=\$(gum choose "worker" "controlplane")
     ARG3=\$(gum input --placeholder "ip of primary control plane")
   fi
@@ -662,7 +662,7 @@ if [ \$SINGLE = true ] ; then
     --version v1.13.2 \
     --set installCRDs=true
 
-  kubectl apply -f artefact/issuer-letsencrypt.yaml
+  kubectl apply -f artefact/issuer-letsencrypt.yaml $SUPRESS_OUTPUT
 
   echo "Install helm ingress-nginx ..."
 
@@ -688,16 +688,16 @@ if [ \$SINGLE = true ] ; then
     --set grafana.service.nodePort=30303 \
     --values artefact/prom-values.yaml
 
-  kubectl apply -f artefact/grafana-secret.yaml
+  kubectl apply -f artefact/grafana-secret.yaml $SUPRESS_OUTPUT
   
   echo "Install helm kube-prometheus-stack ..."
-  
+
   # patch metrics bind address in configmap kube-proxy
   kubectl get configmap kube-proxy --namespace kube-system -o yaml | \
   sed 's/metricsBindAddress: ""/metricsBindAddress: "0.0.0.0"/' | \
   kubectl apply -f -
 
-  kubectl delete pod --selector k8s-app=kube-proxy --namespace kube-system
+  kubectl delete pod --selector k8s-app=kube-proxy --namespace kube-system $SUPRESS_OUTPUT
 fi
 
 ################################################################################
@@ -726,10 +726,10 @@ if [ \$JOIN = true ] && [ \$WORKER = true ] ; then
     --version 3.9.0
   
   # label node for mayastor usage
-  kubectl label node \$HOSTNAME openebs.io/engine=mayastor
+  kubectl label node \$HOSTNAME openebs.io/engine=mayastor $SUPRESS_OUTPUT
 
   # set default storage class
-  kubectl patch storageclass openebs-single-replica -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+  kubectl patch storageclass openebs-single-replica -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}' $SUPRESS_OUTPUT
 
   ################################################################################
   # install ingress-nginx controller
