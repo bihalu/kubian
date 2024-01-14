@@ -594,11 +594,9 @@ fi
 ################################################################################
 # cluster settings -> install cni calico 
 if [ \$CLUSTER = true ] ; then
-  echo "cluster settings"
-
   ################################################################################
   # install projectcalico tigera-operator v3.26.4
-  helm upgrade --install tigera-operator helm/tigera-operator-v3.26.4.tgz \
+  gum spin --title "Install helm tigera-operator ..." -- helm upgrade --install tigera-operator helm/tigera-operator-v3.26.4.tgz \
     --create-namespace \
     --namespace tigera-operator \
     --version v3.26.4
@@ -607,20 +605,20 @@ if [ \$CLUSTER = true ] ; then
     kubectl wait --timeout=2m --for=condition=Ready node/\$HOSTNAME
     [ \$? != 0 ] && echo "ERROR: can't initialize cluster" && exit 1
   fi
+
+  echo "Install helm tigera-operator ..."
 fi
 
 ################################################################################
 # single node cluster
 if [ \$SINGLE = true ] ; then
-  echo "single node cluster"
-
   ################################################################################
   # remove no schedule taint for control plane
-  kubectl taint nodes \$HOSTNAME node-role.kubernetes.io/control-plane=:NoSchedule-
+  kubectl taint nodes \$HOSTNAME node-role.kubernetes.io/control-plane=:NoSchedule- $SUPRESS_OUTPUT
 
   ################################################################################
   # install projectcalico tigera-operator v3.26.4
-  helm upgrade --install tigera-operator helm/tigera-operator-v3.26.4.tgz \
+  gum spin --title "Install helm tigera-operator ..." -- helm upgrade --install tigera-operator helm/tigera-operator-v3.26.4.tgz \
     --create-namespace \
     --namespace tigera-operator \
     --version v3.26.4
@@ -630,19 +628,23 @@ if [ \$SINGLE = true ] ; then
     [ \$? != 0 ] && echo "ERROR: can't initialize cluster" && exit 1
   fi
 
+  echo "Install helm tigera-operator ..."
+
   ################################################################################
   # install openebs openebs 3.9.0
-  helm upgrade --install openebs helm/openebs-3.9.0.tgz \
+  gum spin --title "Install helm openebs ..." -- helm upgrade --install openebs helm/openebs-3.9.0.tgz \
     --create-namespace \
     --namespace openebs \
     --version 3.9.0
+  
+  echo "Install helm openebs ..."
 
   # set default storage class
-  kubectl patch storageclass openebs-hostpath -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+  kubectl patch storageclass openebs-hostpath -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}' $SUPRESS_OUTPUT
 
   ################################################################################
   # install ingress-nginx controller
-  helm upgrade --install ingress-nginx helm/ingress-nginx-4.8.3.tgz \
+  gum spin --title "Install helm ingress-nginx ..." -- helm upgrade --install ingress-nginx helm/ingress-nginx-4.8.3.tgz \
     --create-namespace \
     --namespace ingress-nginx \
     --version 4.8.3 \
@@ -650,9 +652,11 @@ if [ \$SINGLE = true ] ; then
     --set controller.service.nodePorts.http=30080 \
     --set controller.service.nodePorts.https=30443
 
+  echo "Install helm ingress-nginx ..."
+
   ################################################################################
   # install cert-manager
-  helm upgrade --install cert-manager helm/cert-manager-v1.13.2.tgz \
+  gum spin --title "Install helm ingress-nginx ..." -- helm upgrade --install cert-manager helm/cert-manager-v1.13.2.tgz \
     --create-namespace \
     --namespace cert-manager \
     --version v1.13.2 \
@@ -660,17 +664,21 @@ if [ \$SINGLE = true ] ; then
 
   kubectl apply -f artefact/issuer-letsencrypt.yaml
 
+  echo "Install helm ingress-nginx ..."
+
   ################################################################################
   # install metrics-server 3.11.0
-  helm upgrade --install metrics-server helm/metrics-server-3.11.0.tgz \
+  gum spin --title "Install helm metrics-server ..." -- helm upgrade --install metrics-server helm/metrics-server-3.11.0.tgz \
     --create-namespace \
     --namespace monitoring \
     --version 3.11.0 \
     --set args="{--kubelet-insecure-tls}"
 
+  echo "Install helm metrics-server ..."
+
   ################################################################################
   # alertmanager, prometheus and grafana 
-  helm upgrade --install kube-prometheus-stack helm/kube-prometheus-stack-54.2.2.tgz \
+  gum spin --title "Install helm kube-prometheus-stack ..." -- helm upgrade --install kube-prometheus-stack helm/kube-prometheus-stack-54.2.2.tgz \
     --create-namespace \
     --namespace monitoring \
     --version 54.2.2 \
@@ -681,6 +689,8 @@ if [ \$SINGLE = true ] ; then
     --values artefact/prom-values.yaml
 
   kubectl apply -f artefact/grafana-secret.yaml
+  
+  echo "Install helm kube-prometheus-stack ..."
   
   # patch metrics bind address in configmap kube-proxy
   kubectl get configmap kube-proxy --namespace kube-system -o yaml | \
