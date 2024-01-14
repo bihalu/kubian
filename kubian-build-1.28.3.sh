@@ -812,7 +812,7 @@ tar -czf $TAR_FILE  setup.sh deb/ container/ artefact/ helm/
 
 echo '#!/bin/bash' > $SELF_EXTRACTABLE
 echo 'echo Extract archive ...' >> $SELF_EXTRACTABLE
-echo 'dd bs=`head -5 $0 2> /dev/null | wc -c` skip=1 if=$0 | gunzip -c | tar -x' >> $SELF_EXTRACTABLE
+echo 'dd bs=`head -5 $0 | wc -c` skip=1 if=$0 2> /dev/null | gunzip -c | tar -x' >> $SELF_EXTRACTABLE
 echo 'exec ./setup.sh $1 $2 $3' >> $SELF_EXTRACTABLE
 echo '######################################################################' >> $SELF_EXTRACTABLE
 
