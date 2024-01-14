@@ -7,7 +7,8 @@ SVC_NETWORK_CIDR="10.80.0.0/12"
 CLUSTER_NAME="kubian"
 EMAIL="john.doe@inter.net"
 BUILD_START=$(date +%s)
-SUPRESS_OUTPUT="2>&1 > /dev/null"
+SUPRESS_OUTPUT="2>&1>/dev/null"
+SUPRESS_STDERR="2>/dev/null"
 
 ################################################################################
 # install aptitude apt-transport-https gpg wget
@@ -428,7 +429,7 @@ SETUP_START=\$(date +%s)
 
 ################################################################################
 # install gum (silent ;-)
-dpkg --install deb/gum_0.11.0_amd64.deb 2>&1 > /dev/null
+dpkg --install deb/gum_0.11.0_amd64.deb $SUPRESS_STDERR > /dev/null
 
 ################################################################################
 # install packages
@@ -442,11 +443,13 @@ if [ -z "\$1" ] ; then
   gum style \
     --foreground 212 --border-foreground 212 --border rounded \
     --align center --width 30 --margin "1 1" --padding "1 1" \
-    'kubian $VERSION setup' 'select operation?'
+    'kubian $VERSION setup' 'select setup routine?'
   ARG1=\$(gum choose "init" "join" "upgrade" "delete")
 else
   ARG1="\$1"
 fi
+
+echo "Setup routine \$ARG1"
 
 INIT=false
 JOIN=false
@@ -481,6 +484,8 @@ else
   ARG2="\$2"
   ARG3="\$3"
 fi
+
+echo "Setup task \$ARG1 \$ARG2 \$ARG3"
 
 CLUSTER=false
 SINGLE=false
@@ -518,11 +523,11 @@ sed -e "/swap/ s/^/#/" -i /etc/fstab $SUPRESS_OUTPUT
 swapoff --all $SUPRESS_OUTPUT
 
 # prevent swap from being re-enabled via systemd
-systemctl mask swap.target
+systemctl mask swap.target $SUPRESS_STDERR
 
 ################################################################################
 # enable iscsid service
-systemctl enable --now iscsid
+systemctl enable --now iscsid $SUPRESS_STDERR
 
 ################################################################################
 # containerd config
@@ -538,15 +543,15 @@ systemctl restart containerd $SUPRESS_OUTPUT
 
 ################################################################################
 # install helm
-tar Cxzf /tmp artefact/helm-v3.13.3-linux-amd64.tar.gz && cp /tmp/linux-amd64/helm /usr/local/bin/
+tar Cxzf /tmp artefact/helm-v3.13.3-linux-amd64.tar.gz $SUPRESS_STDERR && cp /tmp/linux-amd64/helm /usr/local/bin/
 
 ################################################################################
 # install k9s
-tar Cxzf /tmp artefact/k9s_Linux_amd64.tar.gz && cp /tmp/k9s /usr/local/bin/
+tar Cxzf /tmp artefact/k9s_Linux_amd64.tar.gz $SUPRESS_STDERR && cp /tmp/k9s /usr/local/bin/
 
 ################################################################################
 # install velero
-tar Cxzf /tmp artefact/velero-v1.12.0-linux-amd64.tar.gz && cp /tmp/velero-v1.12.0-linux-amd64/velero /usr/local/bin/
+tar Cxzf /tmp artefact/velero-v1.12.0-linux-amd64.tar.gz $SUPRESS_STDERR && cp /tmp/velero-v1.12.0-linux-amd64/velero /usr/local/bin/
 
 ################################################################################
 # install yq
@@ -564,20 +569,21 @@ systemctl enable kubelet
 ################################################################################
 # import container images
 gum spin --title "Import container images ..." -- ctr --namespace k8s.io images import container/images.tar
+echo "Import container images ..."
 
 ################################################################################
 # init kubernetes cluster -> primary control plane
 if [ \$INIT = true ] ; then
-  echo "init kubernetes cluster ..."
-
   ################################################################################
   # init cluster
   NETWORK_INTERFACE=\$(ip route | grep default | awk '{print \$5}')
   IP_ADDRESS=\$(ip -brief address show \$NETWORK_INTERFACE | awk '{print \$3}' | awk -F/ '{print \$1}')
   echo "controlPlaneEndpoint: \$IP_ADDRESS" >> artefact/kubeadm-config.yaml
 
-  kubeadm init --upload-certs --node-name=\$HOSTNAME --config artefact/kubeadm-config.yaml
+  gum spin --title "Init kubernetes cluster ..." -- kubeadm init --upload-certs --node-name=\$HOSTNAME --config artefact/kubeadm-config.yaml
   [ \$? != 0 ] && echo "ERROR: can't initialize cluster" && exit 1
+
+  echo "Init kubernetes cluster ..."
 
   ################################################################################
   # copy kube config
@@ -812,7 +818,9 @@ tar -czf $TAR_FILE  setup.sh deb/ container/ artefact/ helm/
 
 echo '#!/bin/bash' > $SELF_EXTRACTABLE
 echo 'echo Extract archive ...' >> $SELF_EXTRACTABLE
-echo 'dd bs=`head -5 $0 | wc -c` skip=1 if=$0 2> /dev/null | gunzip -c | tar -x' >> $SELF_EXTRACTABLE
+echo -n 'dd bs=`head -5 $0 | wc -c` skip=1 if=$0 ' >> $SELF_EXTRACTABLE
+echo -n "$SUPRESS_STDERR" >> $SELF_EXTRACTABLE
+echo ' | gunzip -c | tar -x' >> $SELF_EXTRACTABLE
 echo 'exec ./setup.sh $1 $2 $3' >> $SELF_EXTRACTABLE
 echo '######################################################################' >> $SELF_EXTRACTABLE
 

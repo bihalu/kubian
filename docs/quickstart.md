@@ -1,28 +1,21 @@
 # Quickstart
 You need a clean Debian Linux version 12 (bookworm) with 4CPU, 8GB RAM and 40GB DISK.
+All commands are executed as root.  
 
-## 1. Prerequisites
-Set cgroupv1 
-```bash
-sed -i 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="systemd.unified_cgroup_hierarchy=0"/' /etc/default/grub
-update-grub
-reboot
-```
-
-## 2. Build Kubian setup package
+## 1. Build Kubian setup package
 ```bash
 cd ~
 apt install -y git
 git clone https://github.com/bihalu/kubian.git
 cd kubian
-./kubian-build-1.28.1.sh
+./kubian-build-1.28.3.sh
 ```
 Takes about 15 minutes ...  
 coffe break ;-)
 
-## 3. Setup kubernetes single node cluster 
+## 2. Setup kubernetes single node cluster 
 ```bash
-./kubian-setup-1.28.1.tgz.self init single
+./kubian-setup-1.28.3.tgz.self init single
 ```
 Takes about 5 minutes ...  
 almost done   
@@ -36,13 +29,13 @@ k9s
 ![k9s screenshot](k9s.png)
 Pods are created.  
  
-## 4. Build Kubian app package for Wordpress 
+## 3. Build Kubian app package for Wordpress (optional)
 ```bash
 cd apps
 ./kubian-wordpress-6.3.1.sh
 ```
 
-## 5. Install Wordpress 
+## 4. Install Wordpress (optional)
 ```bash
 ./kubian-wordpress-6.3.1.tgz.self install
 ```
