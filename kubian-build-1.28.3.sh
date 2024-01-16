@@ -429,7 +429,7 @@ SETUP_START=\$(date +%s)
 
 ################################################################################
 # install gum (silent ;-)
-dpkg --install deb/gum_0.11.0_amd64.deb $SUPRESS_STDERR > /dev/null
+dpkg --install deb/gum_0.11.0_amd64.deb $SUPRESS_OUTPUT
 
 ################################################################################
 # install packages
@@ -759,7 +759,7 @@ if [ \$JOIN = true ] && [ \$WORKER = true ] ; then
 
   ################################################################################
   # install openebs openebs 3.9.0 (mayastor)
-  helm upgrade --install openebs helm/openebs-3.9.0.tgz \
+  gum spin --title "Install helm openebs (mayastor) ..." -- helm upgrade --install openebs helm/openebs-3.9.0.tgz \
     --create-namespace \
     --namespace openebs \
     --set mayastor.enabled=true \
@@ -768,6 +768,12 @@ if [ \$JOIN = true ] && [ \$WORKER = true ] ; then
     --reuse-values \
     --version 3.9.0
   
+  BETWEEN=\$(date +%s)
+  BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
+  BETWEEN_SECONDS=\$((\$BETWEEN - \$SETUP_START - (\$BETWEEN_MINUTES * 60)))
+
+  printf "Install helm openebs (mayastor) (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
+
   # label node for mayastor usage
   kubectl label node \$HOSTNAME openebs.io/engine=mayastor $SUPRESS_OUTPUT
 
@@ -776,7 +782,7 @@ if [ \$JOIN = true ] && [ \$WORKER = true ] ; then
 
   ################################################################################
   # install ingress-nginx controller
-  helm upgrade --install ingress-nginx helm/ingress-nginx-4.8.3.tgz \
+  gum spin --title "Install helm ingress-nginx ..." -- helm upgrade --install ingress-nginx helm/ingress-nginx-4.8.3.tgz \
     --create-namespace \
     --namespace ingress-nginx \
     --version 4.8.3 \
@@ -784,23 +790,41 @@ if [ \$JOIN = true ] && [ \$WORKER = true ] ; then
     --set controller.service.nodePorts.http=30080 \
     --set controller.service.nodePorts.https=30443
 
+  BETWEEN=\$(date +%s)
+  BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
+  BETWEEN_SECONDS=\$((\$BETWEEN - \$SETUP_START - (\$BETWEEN_MINUTES * 60)))
+
+  printf "Install helm ingress-nginx (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
+
   ################################################################################
   # install cert-manager
-  helm upgrade --install cert-manager helm/cert-manager-v1.13.2.tgz \
+  gum spin --title "Install helm cert-manager ..." -- helm upgrade --install cert-manager helm/cert-manager-v1.13.2.tgz \
     --create-namespace \
     --namespace cert-manager \
     --version v1.13.2 \
     --set installCRDs=true
+  
+  BETWEEN=\$(date +%s)
+  BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
+  BETWEEN_SECONDS=\$((\$BETWEEN - \$SETUP_START - (\$BETWEEN_MINUTES * 60)))
 
-  kubectl apply -f artefact/issuer-letsencrypt.yaml
+  printf "Install helm cert-manager (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
+
+  kubectl apply -f artefact/issuer-letsencrypt.yaml $SUPRESS_OUTPUT
 
   ################################################################################
   # install metrics-server 3.11.0
-  helm upgrade --install metrics-server helm/metrics-server-3.11.0.tgz \
+  gum spin --title "Install helm metrics-server ..." -- helm upgrade --install metrics-server helm/metrics-server-3.11.0.tgz \
     --create-namespace \
     --namespace monitoring \
     --version 3.11.0 \
     --set args="{--kubelet-insecure-tls}"
+
+  BETWEEN=\$(date +%s)
+  BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
+  BETWEEN_SECONDS=\$((\$BETWEEN - \$SETUP_START - (\$BETWEEN_MINUTES * 60)))
+
+  printf "Install helm metrics-server (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
 fi
 
 ################################################################################
