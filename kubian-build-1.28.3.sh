@@ -434,8 +434,14 @@ dpkg --install deb/gum_0.11.0_amd64.deb $SUPRESS_STDERR > /dev/null
 ################################################################################
 # install packages
 PACKAGES=\$(find deb -name "*.deb")
+
 gum spin --title "Install packages ..." -- dpkg --install \$PACKAGES
-echo "Install packages ..."
+
+BETWEEN=\$(date +%s)
+BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
+BETWEEN_SECONDS=\$((\$BETWEEN - \$SETUP_START - (\$BETWEEN_MINUTES * 60)))
+
+printf "Install packages (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
 
 ################################################################################
 # specific setup routines: init, join, upgrade or delete
@@ -569,7 +575,12 @@ systemctl enable kubelet
 ################################################################################
 # import container images
 gum spin --title "Import container images ..." -- ctr --namespace k8s.io images import container/images.tar
-echo "Import container images ..."
+
+BETWEEN=\$(date +%s)
+BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
+BETWEEN_SECONDS=\$((\$BETWEEN - \$SETUP_START - (\$BETWEEN_MINUTES * 60)))
+
+printf "Import container images (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
 
 ################################################################################
 # init kubernetes cluster -> primary control plane
@@ -583,7 +594,11 @@ if [ \$INIT = true ] ; then
   gum spin --title "Init kubernetes cluster ..." -- kubeadm init --upload-certs --node-name=\$HOSTNAME --config artefact/kubeadm-config.yaml
   [ \$? != 0 ] && echo "ERROR: can't initialize cluster" && exit 1
 
-  echo "Init kubernetes cluster ..."
+  BETWEEN=\$(date +%s)
+  BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
+  BETWEEN_SECONDS=\$((\$BETWEEN - \$SETUP_START - (\$BETWEEN_MINUTES * 60)))
+
+  printf "Init kubernetes cluster (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
 
   ################################################################################
   # copy kube config
@@ -606,7 +621,11 @@ if [ \$CLUSTER = true ] ; then
     [ \$? != 0 ] && echo "ERROR: can't initialize cluster" && exit 1
   fi
 
-  echo "Install helm tigera-operator ..."
+  BETWEEN=\$(date +%s)
+  BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
+  BETWEEN_SECONDS=\$((\$BETWEEN - \$SETUP_START - (\$BETWEEN_MINUTES * 60)))
+
+  printf "Install helm tigera-operator (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
 fi
 
 ################################################################################
@@ -628,7 +647,11 @@ if [ \$SINGLE = true ] ; then
     [ \$? != 0 ] && echo "ERROR: can't initialize cluster" && exit 1
   fi
 
-  echo "Install helm tigera-operator ..."
+  BETWEEN=\$(date +%s)
+  BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
+  BETWEEN_SECONDS=\$((\$BETWEEN - \$SETUP_START - (\$BETWEEN_MINUTES * 60)))
+
+  printf "Install helm tigera-operator (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
 
   ################################################################################
   # install openebs openebs 3.9.0
@@ -637,7 +660,11 @@ if [ \$SINGLE = true ] ; then
     --namespace openebs \
     --version 3.9.0
   
-  echo "Install helm openebs ..."
+  BETWEEN=\$(date +%s)
+  BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
+  BETWEEN_SECONDS=\$((\$BETWEEN - \$SETUP_START - (\$BETWEEN_MINUTES * 60)))
+
+  printf "Install helm openebs (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
 
   # set default storage class
   kubectl patch storageclass openebs-hostpath -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}' $SUPRESS_OUTPUT
@@ -652,11 +679,15 @@ if [ \$SINGLE = true ] ; then
     --set controller.service.nodePorts.http=30080 \
     --set controller.service.nodePorts.https=30443
 
-  echo "Install helm ingress-nginx ..."
+  BETWEEN=\$(date +%s)
+  BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
+  BETWEEN_SECONDS=\$((\$BETWEEN - \$SETUP_START - (\$BETWEEN_MINUTES * 60)))
+
+  printf "Install helm ingress-nginx (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
 
   ################################################################################
   # install cert-manager
-  gum spin --title "Install helm ingress-nginx ..." -- helm upgrade --install cert-manager helm/cert-manager-v1.13.2.tgz \
+  gum spin --title "Install helm cert-manager ..." -- helm upgrade --install cert-manager helm/cert-manager-v1.13.2.tgz \
     --create-namespace \
     --namespace cert-manager \
     --version v1.13.2 \
@@ -664,7 +695,11 @@ if [ \$SINGLE = true ] ; then
 
   kubectl apply -f artefact/issuer-letsencrypt.yaml $SUPRESS_OUTPUT
 
-  echo "Install helm ingress-nginx ..."
+  BETWEEN=\$(date +%s)
+  BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
+  BETWEEN_SECONDS=\$((\$BETWEEN - \$SETUP_START - (\$BETWEEN_MINUTES * 60)))
+
+  printf "Install helm cert-manager (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
 
   ################################################################################
   # install metrics-server 3.11.0
@@ -674,7 +709,11 @@ if [ \$SINGLE = true ] ; then
     --version 3.11.0 \
     --set args="{--kubelet-insecure-tls}"
 
-  echo "Install helm metrics-server ..."
+  BETWEEN=\$(date +%s)
+  BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
+  BETWEEN_SECONDS=\$((\$BETWEEN - \$SETUP_START - (\$BETWEEN_MINUTES * 60)))
+
+  printf "Install helm metrics-server (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
 
   ################################################################################
   # alertmanager, prometheus and grafana 
@@ -690,12 +729,16 @@ if [ \$SINGLE = true ] ; then
 
   kubectl apply -f artefact/grafana-secret.yaml $SUPRESS_OUTPUT
   
-  echo "Install helm kube-prometheus-stack ..."
+  BETWEEN=\$(date +%s)
+  BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
+  BETWEEN_SECONDS=\$((\$BETWEEN - \$SETUP_START - (\$BETWEEN_MINUTES * 60)))
+
+  printf "Install helm kube-prometheus-stack (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
 
   # patch metrics bind address in configmap kube-proxy
   kubectl get configmap kube-proxy --namespace kube-system -o yaml | \
   sed 's/metricsBindAddress: ""/metricsBindAddress: "0.0.0.0"/' | \
-  kubectl apply -f -
+  kubectl apply -f - $SUPRESS_OUTPUT
 
   kubectl delete pod --selector k8s-app=kube-proxy --namespace kube-system $SUPRESS_OUTPUT
 fi
