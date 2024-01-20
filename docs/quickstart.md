@@ -28,7 +28,7 @@ k9s
 ```
 
 ![k9s screenshot](k9s.png)
-Pods are created.  
+Pods are running.  
 
 ## Summary
 You can set up a kubernetes cluster in under half an hour. If you have already built the setup and app package it is even faster. Save these packages on a usb stick and you can quickly set up a kubernetes cluster in no time.  
