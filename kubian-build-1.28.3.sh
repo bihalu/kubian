@@ -8,6 +8,7 @@ CLUSTER_NAME="kubian"
 EMAIL="john.doe@inter.net"
 BUILD_START=$(date +%s)
 SUPRESS_OUTPUT="2>&1>/dev/null"
+SUPRESS_STDOUT="1>/dev/null"
 SUPRESS_STDERR="2>/dev/null"
 
 ################################################################################
@@ -738,7 +739,7 @@ if [ \$SINGLE = true ] ; then
   # patch metrics bind address in configmap kube-proxy
   kubectl get configmap kube-proxy --namespace kube-system -o yaml | \
   sed 's/metricsBindAddress: ""/metricsBindAddress: "0.0.0.0"/' | \
-  kubectl apply -f - $SUPRESS_OUTPUT
+  kubectl apply -f - $SUPRESS_STDERR $SUPRESS_STDOUT
 
   kubectl delete pod --selector k8s-app=kube-proxy --namespace kube-system $SUPRESS_OUTPUT
 fi
