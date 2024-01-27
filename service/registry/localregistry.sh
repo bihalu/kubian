@@ -4,7 +4,7 @@ NAME="localregistry"
 VERSION="0.1.0"
 
 ############################################################
-# status
+# status service
 if [ "$1" = "status" ] ; then
   TASK=$(/usr/bin/ctr task list | grep localregistry)
   if [ -z "$TASK" ] ; then
@@ -19,7 +19,7 @@ if [ "$1" = "status" ] ; then
 fi
 
 ############################################################
-# start
+# start service
 if [ "$1" = "start" ] ; then
   /usr/bin/ctr run \
     --net-host \
@@ -160,7 +160,7 @@ if [ "$1" = "build" ] ; then
 fi
 
 ############################################################
-# setup
+# setup package
 if [ "$1" = "setup" ] ; then
 
   # install containerd
