@@ -1,8 +1,7 @@
 #!/bin/bash
 
 NAME="localregistry"
-VERSION="2"
-SUPRESS_OUTPUT="2>&1>/dev/null"
+VERSION="0.1.0"
 
 ############################################################
 # status
@@ -168,12 +167,12 @@ if [ "$1" = "setup" ] ; then
   PACKAGES=$(find deb -name "*.deb")
   dpkg --install $PACKAGES
 
-  containerd config default | tee /etc/containerd/config.toml $SUPRESS_OUTPUT
-  systemctl restart containerd $SUPRESS_OUTPUT
+  containerd config default | tee /etc/containerd/config.toml
+  systemctl restart containerd
 
   # import container image
-  ctr images import container/images.tar $SUPRESS_OUTPUT
+  ctr images import container/images.tar
 
   # cleanup
-  rm -rf deb/ container/ $SUPRESS_OUTPUT
+  rm -rf deb/ container/
 fi
