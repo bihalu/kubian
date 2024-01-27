@@ -86,7 +86,7 @@ fi
 # build package
 if [ "$1" = "build" ] ; then
 
-  apt install -y containerd
+  apt install -y aptitude apt-transport-https containerd
 
   # configure containerd
   containerd config default | tee /etc/containerd/config.toml
