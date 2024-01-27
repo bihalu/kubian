@@ -166,7 +166,7 @@ if [ "$1" = "build" ] ; then
   cd haproxy/2.9
   podman build -t docker.io/library/haproxy:bookworm . --format docker
   podman image save > ../../container/images.tar docker.io/library/haproxy:bookworm
-  cd ..  
+  cd ../..  
   
   TAR_FILE="$NAME-$VERSION.tgz"
   SELF_EXTRACTABLE="$TAR_FILE.self"
