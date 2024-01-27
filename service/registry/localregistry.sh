@@ -91,17 +91,17 @@ if [ "$1" = "build" ] ; then
   # configure containerd
   containerd config default | tee /etc/containerd/config.toml
 
-  readarray -t PACKAGES <<"  EOL_PACKAGES"
-  # containerd
-  containerd 1.6.20~ds1-1+b1 amd64
-  criu 3.17.1-2 amd64
-  libnet1:amd64 1.1.6+dfsg-3.2 amd64
-  libnl-3-200:amd64 3.7.0-0.2+b1 amd64
-  libprotobuf32:amd64 3.21.12-3 amd64
-  python3-protobuf 3.21.12-3 amd64
-  runc 1.1.5+ds1-1+b1 amd64
-  sgml-base 1.31 all
-  EOL_PACKAGES
+readarray -t PACKAGES <<EOL_PACKAGES
+# containerd
+containerd 1.6.20~ds1-1+b1 amd64
+criu 3.17.1-2 amd64
+libnet1:amd64 1.1.6+dfsg-3.2 amd64
+libnl-3-200:amd64 3.7.0-0.2+b1 amd64
+libprotobuf32:amd64 3.21.12-3 amd64
+python3-protobuf 3.21.12-3 amd64
+runc 1.1.5+ds1-1+b1 amd64
+sgml-base 1.31 all
+EOL_PACKAGES
 
   mkdir -p deb
 
