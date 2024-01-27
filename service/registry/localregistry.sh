@@ -2,6 +2,7 @@
 
 NAME="localregistry"
 VERSION="2"
+SUPRESS_OUTPUT="2>&1>/dev/null"
 
 ############################################################
 # status
@@ -91,17 +92,17 @@ if [ "$1" = "build" ] ; then
   # configure containerd
   containerd config default | tee /etc/containerd/config.toml
 
-readarray -t PACKAGES <<EOL_PACKAGES
-# containerd
-containerd 1.6.20~ds1-1+b1 amd64
-criu 3.17.1-2 amd64
-libnet1:amd64 1.1.6+dfsg-3.2 amd64
-libnl-3-200:amd64 3.7.0-0.2+b1 amd64
-libprotobuf32:amd64 3.21.12-3 amd64
-python3-protobuf 3.21.12-3 amd64
-runc 1.1.5+ds1-1+b1 amd64
-sgml-base 1.31 all
-EOL_PACKAGES
+  readarray -t PACKAGES <<"  EOL_PACKAGES"
+  # containerd
+  containerd 1.6.20~ds1-1+b1 amd64
+  criu 3.17.1-2 amd64
+  libnet1:amd64 1.1.6+dfsg-3.2 amd64
+  libnl-3-200:amd64 3.7.0-0.2+b1 amd64
+  libprotobuf32:amd64 3.21.12-3 amd64
+  python3-protobuf 3.21.12-3 amd64
+  runc 1.1.5+ds1-1+b1 amd64
+  sgml-base 1.31 all
+  EOL_PACKAGES
 
   mkdir -p deb
 
@@ -109,7 +110,7 @@ EOL_PACKAGES
 
   for PACKAGE in "${PACKAGES[@]}" ; do
     # don't process commented out packages
-    [ ${PACKAGE:0:1} = \# ] && continue
+    [ ${PACKAGE:2:1} = \# ] && continue
 
     # parse package data
     PACKAGE_DATA=($PACKAGE)
@@ -165,11 +166,14 @@ if [ "$1" = "setup" ] ; then
 
   # install containerd
   PACKAGES=$(find deb -name "*.deb")
-  dpkg --install $PACKAGES
+  dpkg --install $PACKAGES $SUPRESS_OUTPUT
 
-  containerd config default | tee /etc/containerd/config.toml
-  systemctl restart containerd
+  containerd config default | tee /etc/containerd/config.toml $SUPRESS_OUTPUT
+  systemctl restart containerd $SUPRESS_OUTPUT
 
   # import container image
-  ctr images import container/images.tar
+  ctr images import container/images.tar $SUPRESS_OUTPUT
+
+  # cleanup
+  rm -rf deb/ container/ $SUPRESS_OUTPUT
 fi
