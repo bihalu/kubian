@@ -156,11 +156,11 @@ if [ "$1" = "build" ] ; then
     fi 
   done
 
-  ctr image pull docker.io/library/haproxy:bookworm
+  ctr image pull docker.io/library/haproxy:bookworm --platform linux/amd64
 
   mkdir -p container
 
-  ctr images export container/images.tar docker.io/library/haproxy:bookworm
+  ctr images export container/images.tar docker.io/library/haproxy:bookworm --platform linux/amd64
 
   TAR_FILE="$NAME-$VERSION.tgz"
   SELF_EXTRACTABLE="$TAR_FILE.self"
