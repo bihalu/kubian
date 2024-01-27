@@ -167,14 +167,14 @@ if [ "$1" = "build" ] ; then
 
   echo "Be patient creating self extracting archive ..."
   # pack and create self extracting archive
-  tar -czf $TAR_FILE  localregistry.sh deb/ container/
+  tar -czf $TAR_FILE  haproxy.sh deb/ container/
 
   echo '#!/bin/bash' > $SELF_EXTRACTABLE
   echo 'echo Extract archive ...' >> $SELF_EXTRACTABLE
   echo -n 'dd bs=`head -5 $0 | wc -c` skip=1 if=$0 ' >> $SELF_EXTRACTABLE
   echo -n "$SUPRESS_STDERR" >> $SELF_EXTRACTABLE
   echo ' | gunzip -c | tar -x' >> $SELF_EXTRACTABLE
-  echo 'exec ./localregistry.sh setup' >> $SELF_EXTRACTABLE
+  echo 'exec ./haproxy.sh setup' >> $SELF_EXTRACTABLE
   echo '######################################################################' >> $SELF_EXTRACTABLE
 
   cat $TAR_FILE >> $SELF_EXTRACTABLE
