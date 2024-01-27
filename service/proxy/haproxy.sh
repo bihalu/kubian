@@ -156,12 +156,18 @@ if [ "$1" = "build" ] ; then
     fi 
   done
 
-  ctr image pull docker.io/library/haproxy:bookworm --platform linux/amd64
-
   mkdir -p container
 
-  ctr images export container/images.tar docker.io/library/haproxy:bookworm --platform linux/amd64
+  # image format is not docker! need to build image from source
+  # ctr image pull docker.io/library/haproxy:bookworm 
+  # ctr images export container/images.tar docker.io/library/haproxy:bookworm
 
+  git clone https://github.com/docker-library/haproxy.git
+  cd haproxy
+  podman build -t docker.io/library/haproxy:bookworm . --format docker
+  podman image save > ../container/images.tar docker.io/library/haproxy:bookworm
+  cd ..  
+  
   TAR_FILE="$NAME-$VERSION.tgz"
   SELF_EXTRACTABLE="$TAR_FILE.self"
 
