@@ -163,9 +163,9 @@ if [ "$1" = "build" ] ; then
   # ctr images export container/images.tar docker.io/library/haproxy:bookworm
 
   git clone https://github.com/docker-library/haproxy.git
-  cd haproxy
+  cd haproxy/2.9
   podman build -t docker.io/library/haproxy:bookworm . --format docker
-  podman image save > ../container/images.tar docker.io/library/haproxy:bookworm
+  podman image save > ../../container/images.tar docker.io/library/haproxy:bookworm
   cd ..  
   
   TAR_FILE="$NAME-$VERSION.tgz"
