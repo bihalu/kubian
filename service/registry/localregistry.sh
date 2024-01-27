@@ -166,7 +166,7 @@ if [ "$1" = "setup" ] ; then
 
   # install containerd
   PACKAGES=$(find deb -name "*.deb")
-  dpkg --install $PACKAGES $SUPRESS_OUTPUT
+  dpkg --install $PACKAGES
 
   containerd config default | tee /etc/containerd/config.toml $SUPRESS_OUTPUT
   systemctl restart containerd $SUPRESS_OUTPUT
