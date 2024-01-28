@@ -55,7 +55,7 @@ fi
 if [ "$1" = "add" ] ; then
   tee << "  EOL_HAPROXY_SERVICE" | sed 's/^    //' > /etc/systemd/system/haproxy.service
     [Unit]
-    Description=local registry service
+    Description=haproxy service
     After=network.target
     [Service]
     Type=forking

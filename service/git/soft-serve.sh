@@ -1,15 +1,15 @@
 #!/bin/bash
 
-NAME="softserve"
+NAME="soft-serve"
 VERSION="0.1.0"
 SUPRESS_STDERR="2>/dev/null"
 
 ############################################################
 # status service
 if [ "$1" = "status" ] ; then
-  TASK=$(/usr/bin/ctr task list | grep softserve)
+  TASK=$(/usr/bin/ctr task list | grep soft-serve)
   if [ -z "$TASK" ] ; then
-    echo "no softserve"
+    echo "no soft-serve"
   else
     TASK_DATA=($TASK)
     TASK_NAME="${TASK_DATA[0]}"
@@ -26,18 +26,18 @@ if [ "$1" = "start" ] ; then
     --net-host \
     --detach \
     --mount type=bind,src=/usr/local/soft-serve,dst=/soft-serve,options=rbind:rw \
-    docker.io/charmcli/soft-serve:v0.7.4 softserve
+    docker.io/charmcli/soft-serve:v0.7.4 soft-serve
 
   if [ $? -ne 0 ] ; then
     exit $?
   fi
-  TASK=$(/usr/bin/ctr task list | grep softserve)
+  TASK=$(/usr/bin/ctr task list | grep soft-serve)
   if [ -z "$TASK" ] ; then
     exit 1
   else
     TASK_DATA=($TASK)
     TASK_PID="${TASK_DATA[1]}"
-    echo $TASK_PID > /run/softserve.pid
+    echo $TASK_PID > /run/soft-serve.pid
   fi
   exit 0
 fi
@@ -45,41 +45,41 @@ fi
 ############################################################
 # stop service
 if [ "$1" = "stop" ] ; then
-  /usr/bin/ctr task kill softserve
-  /usr/bin/ctr task delete softserve
-  /usr/bin/ctr container delete softserve
+  /usr/bin/ctr task kill soft-serve
+  /usr/bin/ctr task delete soft-serve
+  /usr/bin/ctr container delete soft-serve
 fi
 
 ############################################################
 # add service
 if [ "$1" = "add" ] ; then
-  tee << "  EOL_SOFTSERVE_SERVICE" | sed 's/^    //' > /etc/systemd/system/softserve.service
+  tee << "  EOL_SOFT_SERVE_SERVICE" | sed 's/^    //' > /etc/systemd/system/soft-serve.service
     [Unit]
-    Description=local registry service
+    Description=soft-serve git service
     After=network.target
     [Service]
     Type=forking
     Restart=on-failure
     RestartSec=3
-    PIDFile=/run/softserve.pid
-    ExecStart=/etc/systemd/system/softserve.sh start
-    ExecStop=/etc/systemd/system/softserve.sh stop
+    PIDFile=/run/soft-serve.pid
+    ExecStart=/etc/systemd/system/soft-serve.sh start
+    ExecStop=/etc/systemd/system/soft-serve.sh stop
     [Install]
     WantedBy=multi-user.target
-  EOL_SOFTSERVE_SERVICE
+  EOL_SOFT_SERVE_SERVICE
 
   cp $0 /etc/systemd/system/
-  mkdir -p /usr/local/softserve
+  mkdir -p /usr/local/soft-serve
   systemctl daemon-reload
 fi
 
 ############################################################
 # remove service
 if [ "$1" = "remove" ] ; then
-  systemctl stop softserve
-  systemctl disable softserve
-  rm -f /etc/systemd/system/softserve.service
-  rm -f /etc/systemd/system/softserve.sh
+  systemctl stop soft-serve
+  systemctl disable soft-serve
+  rm -f /etc/systemd/system/soft-serve.service
+  rm -f /etc/systemd/system/soft-serve.sh
   systemctl daemon-reload
 fi
 
@@ -144,14 +144,14 @@ if [ "$1" = "build" ] ; then
 
   echo "Be patient creating self extracting archive ..."
   # pack and create self extracting archive
-  tar -czf $TAR_FILE  softserve.sh deb/ container/
+  tar -czf $TAR_FILE  soft-serve.sh deb/ container/
 
   echo '#!/bin/bash' > $SELF_EXTRACTABLE
   echo 'echo Extract archive ...' >> $SELF_EXTRACTABLE
   echo -n 'dd bs=`head -5 $0 | wc -c` skip=1 if=$0 ' >> $SELF_EXTRACTABLE
   echo -n "$SUPRESS_STDERR" >> $SELF_EXTRACTABLE
   echo ' | gunzip -c | tar -x' >> $SELF_EXTRACTABLE
-  echo 'exec ./softserve.sh setup' >> $SELF_EXTRACTABLE
+  echo 'exec ./soft-serve.sh setup' >> $SELF_EXTRACTABLE
   echo '######################################################################' >> $SELF_EXTRACTABLE
 
   cat $TAR_FILE >> $SELF_EXTRACTABLE
