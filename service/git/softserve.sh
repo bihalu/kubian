@@ -2,6 +2,7 @@
 
 NAME="softserve"
 VERSION="0.1.0"
+SUPRESS_STDERR="2>/dev/null"
 
 ############################################################
 # status service
@@ -85,6 +86,53 @@ fi
 ############################################################
 # build package
 if [ "$1" = "build" ] ; then
+
+  apt install -y aptitude apt-transport-https containerd
+
+  # configure containerd
+  containerd config default | tee /etc/containerd/config.toml
+
+  readarray -t PACKAGES <<"  EOL_PACKAGES"
+  # containerd
+  containerd 1.6.20~ds1-1+b1 amd64
+  criu 3.17.1-2 amd64
+  libnet1:amd64 1.1.6+dfsg-3.2 amd64
+  libnl-3-200:amd64 3.7.0-0.2+b1 amd64
+  libprotobuf32:amd64 3.21.12-3 amd64
+  python3-protobuf 3.21.12-3 amd64
+  runc 1.1.5+ds1-1+b1 amd64
+  sgml-base 1.31 all
+  EOL_PACKAGES
+
+  mkdir -p deb
+
+  aptitude clean
+
+  for PACKAGE in "${PACKAGES[@]}" ; do
+    # don't process commented out packages
+    [ ${PACKAGE:2:1} = \# ] && continue
+
+    # parse package data
+    PACKAGE_DATA=($PACKAGE)
+    PACKAGE_NAME="${PACKAGE_DATA[0]%:amd64}"
+    PACKAGE_VERSION="${PACKAGE_DATA[1]}"
+    PACKAGE_ARCH="${PACKAGE_DATA[2]}"
+    PACKAGE_VERSION_FILE=$(echo $PACKAGE_VERSION |sed 's/:/%3a/')
+    PACKAGE_FILE="${PACKAGE_NAME}_${PACKAGE_VERSION_FILE}_${PACKAGE_ARCH}.deb"
+
+    # skip download if already available
+    [ -f deb/$PACKAGE_FILE ] && continue
+
+    # download package
+    aptitude --download-only install -y $PACKAGE_NAME=$PACKAGE_VERSION
+    cp /var/cache/apt/archives/$PACKAGE_FILE deb/
+    if [ $? != 0 ] ; then
+      # aptitude will not download if package is installed, try download reinstall
+      aptitude --download-only reinstall $PACKAGE_NAME
+      cp /var/cache/apt/archives/$PACKAGE_FILE deb/
+      [ $? != 0 ] && exit 1
+    fi 
+  done
 
   mkdir -p container
 

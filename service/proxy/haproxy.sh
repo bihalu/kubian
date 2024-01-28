@@ -2,6 +2,7 @@
 
 NAME="haproxy"
 VERSION="0.1.0"
+SUPRESS_STDERR="2>/dev/null"
 
 ############################################################
 # status service

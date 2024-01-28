@@ -2,6 +2,7 @@
 
 NAME="localregistry"
 VERSION="0.1.0"
+SUPRESS_STDERR="2>/dev/null"
 
 ############################################################
 # status service
@@ -133,10 +134,9 @@ if [ "$1" = "build" ] ; then
     fi 
   done
 
-  ctr image pull docker.io/library/registry:2
-
   mkdir -p container
 
+  ctr image pull docker.io/library/registry:2
   ctr images export container/images.tar docker.io/library/registry:2
 
   TAR_FILE="$NAME-$VERSION.tgz"
