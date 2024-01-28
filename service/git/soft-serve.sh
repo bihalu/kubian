@@ -22,11 +22,10 @@ fi
 ############################################################
 # start service
 if [ "$1" = "start" ] ; then
-  export SOFT_SERVE_INITIAL_ADMIN_KEYS=$(cat ~/.ssh/id_ed25519.pub)
   /usr/bin/ctr run \
     --net-host \
     --detach \
-    --env SOFT_SERVE_INITIAL_ADMIN_KEYS \
+    --env "SOFT_SERVE_INITIAL_ADMIN_KEYS=$(cat ~/.ssh/id_ed25519.pub)" \
     --mount type=bind,src=/usr/local/soft-serve,dst=/soft-serve,options=rbind:rw \
     docker.io/charmcli/soft-serve:v0.7.4 soft-serve
 
