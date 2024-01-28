@@ -156,7 +156,7 @@ if [ "$1" = "build" ] ; then
 
   cat $TAR_FILE >> $SELF_EXTRACTABLE
   chmod a+x $SELF_EXTRACTABLE
-  rm -rf $TAR_FILE container/
+  rm -rf $TAR_FILE deb/ container/
 fi
 
 ############################################################
@@ -169,7 +169,7 @@ if [ "$1" = "setup" ] ; then
 
   containerd config default | tee /etc/containerd/config.toml
   systemctl restart containerd
-  
+
   # import container image
   ctr images import container/images.tar
 
