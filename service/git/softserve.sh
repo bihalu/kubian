@@ -163,6 +163,13 @@ fi
 # setup package
 if [ "$1" = "setup" ] ; then
 
+  # install containerd
+  PACKAGES=$(find deb -name "*.deb")
+  dpkg --install $PACKAGES
+
+  containerd config default | tee /etc/containerd/config.toml
+  systemctl restart containerd
+  
   # import container image
   ctr images import container/images.tar
 
