@@ -69,8 +69,7 @@ if [ "$1" = "add" ] ; then
     WantedBy=multi-user.target
   EOL_SOFT_SERVE_SERVICE
 
-  sed -i '1,/# build package/!d' $0 > /etc/systemd/system/$0
-  #cp $0 /etc/systemd/system/
+  sed '1,/# EOF/!d' $0 > /etc/systemd/system/$0
   mkdir -p /usr/local/soft-serve
   systemctl daemon-reload
 fi
@@ -85,6 +84,7 @@ if [ "$1" = "remove" ] ; then
   systemctl daemon-reload
 fi
 
+# EOF
 ############################################################
 # build package
 if [ "$1" = "build" ] ; then
