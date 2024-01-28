@@ -69,7 +69,7 @@ if [ "$1" = "add" ] ; then
     WantedBy=multi-user.target
   EOL_SOFT_SERVE_SERVICE
 
-  sed '1,/# EOF/!d' $0 > /etc/systemd/system/$0
+  sed '1,/^# EOF/!d' $0 > /etc/systemd/system/$0
   mkdir -p /usr/local/soft-serve
   systemctl daemon-reload
 fi
