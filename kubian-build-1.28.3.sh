@@ -96,7 +96,7 @@ libnet1:amd64 1.1.6+dfsg-3.2 amd64
 libnl-3-200:amd64 3.7.0-0.2+b1 amd64
 libprotobuf32:amd64 3.21.12-3 amd64
 python3-protobuf 3.21.12-3 amd64
-runc 1.1.5+ds1-1+b1 amd64
+runc_1.1.5+ds1-1+deb12u1 amd64
 sgml-base 1.31 all
 # gpg
 dirmngr 2.2.40-1.1 amd64
