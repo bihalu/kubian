@@ -164,8 +164,8 @@ if [ "$1" = "build" ] ; then
 
   mkdir -p container
 
-  ctr image pull docker.io/library/haproxy:2.9-alpine 
-  ctr images export container/images.tar docker.io/library/haproxy:2.9-alpine
+  ctr image pull docker.io/library/haproxy:2.9-alpine --platform amd64
+  ctr images export container/images.tar docker.io/library/haproxy:2.9-alpine --platform amd64
   
   TAR_FILE="$NAME-$VERSION.tgz"
   SELF_EXTRACTABLE="$TAR_FILE.self"
@@ -199,7 +199,7 @@ if [ "$1" = "setup" ] ; then
   systemctl restart containerd
 
   # import container image
-  ctr images import container/images.tar
+  ctr images import container/images.tar --platform amd64
 
   # cleanup
   rm -rf deb/ container/
