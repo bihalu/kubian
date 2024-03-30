@@ -22,11 +22,16 @@ fi
 ############################################################
 # start service
 if [ "$1" = "start" ] ; then
+  /usr/bin/ctr container list --quiet | grep haproxy
+  if [ $? -eq 0 ] ; then
+    /usr/bin/ctr task kill haproxy
+    /usr/bin/ctr container remove haproxy
+  fi
   /usr/bin/ctr run \
     --net-host \
     --detach \
     --mount type=bind,src=/usr/local/etc/haproxy,dst=/usr/local/etc/haproxy,options=rbind:ro \
-    docker.io/library/haproxy:bookworm haproxy
+    docker.io/library/haproxy:2.9-alpine haproxy
 
   if [ $? -ne 0 ] ; then
     exit $?
@@ -159,15 +164,8 @@ if [ "$1" = "build" ] ; then
 
   mkdir -p container
 
-  # image format is not docker! need to build image from source
-  # ctr image pull docker.io/library/haproxy:bookworm 
-  # ctr images export container/images.tar docker.io/library/haproxy:bookworm
-
-  git clone https://github.com/docker-library/haproxy.git
-  cd haproxy/2.9
-  podman build -t docker.io/library/haproxy:bookworm . --format docker
-  podman image save > ../../container/images.tar docker.io/library/haproxy:bookworm
-  cd ../..  
+  ctr image pull docker.io/library/haproxy:2.9-alpine 
+  ctr images export container/images.tar docker.io/library/haproxy:2.9-alpine
   
   TAR_FILE="$NAME-$VERSION.tgz"
   SELF_EXTRACTABLE="$TAR_FILE.self"

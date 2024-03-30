@@ -22,6 +22,11 @@ fi
 ############################################################
 # start service
 if [ "$1" = "start" ] ; then
+  /usr/bin/ctr container list --quiet | grep localregistry
+  if [ $? -eq 0 ] ; then
+    /usr/bin/ctr task kill localregistry
+    /usr/bin/ctr container remove localregistry
+  fi
   /usr/bin/ctr run \
     --net-host \
     --detach \

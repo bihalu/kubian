@@ -22,6 +22,11 @@ fi
 ############################################################
 # start service
 if [ "$1" = "start" ] ; then
+  /usr/bin/ctr container list --quiet | grep soft-serve
+  if [ $? -eq 0 ] ; then
+    /usr/bin/ctr task kill soft-serve
+    /usr/bin/ctr container remove soft-serve
+  fi
   /usr/bin/ctr run \
     --net-host \
     --detach \
