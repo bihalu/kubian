@@ -172,7 +172,7 @@ fi
 # setup package
 if [ "$1" = "setup" ] ; then
 
-  dpkg --install deb/gum_0.11.0_amd64.deb $SUPRESS_OUTPUT
+  dpkg --install deb/gum_0.11.0_amd64.deb \$SUPRESS_OUTPUT
 
   # install containerd
   PACKAGES=$(find deb -name "*.deb")
@@ -189,5 +189,5 @@ if [ "$1" = "setup" ] ; then
   ./localregistry.sh add
 
   # cleanup
-  rm -rf deb/ container/ localregistry.sh
+  rm -rf deb/ container/ 
 fi
