@@ -2,6 +2,8 @@
 
 NAME="soft-serve"
 VERSION="0.1.0"
+SUPRESS_OUTPUT="2>&1>/dev/null"
+SUPRESS_STDOUT="1>/dev/null"
 SUPRESS_STDERR="2>/dev/null"
 
 ############################################################
@@ -173,10 +175,11 @@ if [ "$1" = "setup" ] ; then
 
   # install containerd
   PACKAGES=$(find deb -name "*.deb")
-  dpkg --install $PACKAGES
+  dpkg --install $PACKAGES $SUPRESS_OUTPUT
 
-  containerd config default | tee /etc/containerd/config.toml
-  systemctl restart containerd
+  containerd config default | tee /etc/containerd/config.toml $SUPRESS_OUTPUT
+  sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml $SUPRESS_OUTPUT
+  systemctl restart containerd $SUPRESS_OUTPUT
 
   # import container image
   ctr images import container/images.tar
