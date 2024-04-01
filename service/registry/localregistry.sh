@@ -78,13 +78,13 @@ if [ "$1" = "add" ] ; then
   cp $0 /etc/systemd/system/
   mkdir -p /usr/local/registry
   systemctl daemon-reload
+  systemctl enable localregistry --now
 fi
 
 ############################################################
 # remove service
 if [ "$1" = "remove" ] ; then
-  systemctl stop localregistry
-  systemctl disable localregistry
+  systemctl disable localregistry --now
   rm -f /etc/systemd/system/localregistry.service
   rm -f /etc/systemd/system/localregistry.sh
   systemctl daemon-reload
@@ -141,6 +141,8 @@ if [ "$1" = "build" ] ; then
     fi 
   done
 
+  wget https://github.com/charmbracelet/gum/releases/download/v0.11.0/gum_0.11.0_amd64.deb -P deb
+
   mkdir -p container
 
   ctr image pull docker.io/library/registry:2
@@ -170,9 +172,11 @@ fi
 # setup package
 if [ "$1" = "setup" ] ; then
 
+  dpkg --install deb/gum_0.11.0_amd64.deb $SUPRESS_OUTPUT
+
   # install containerd
   PACKAGES=$(find deb -name "*.deb")
-  dpkg --install $PACKAGES $SUPRESS_OUTPUT
+  gum spin --title "Install packages ..." -- dpkg --install \$PACKAGES
 
   containerd config default | tee /etc/containerd/config.toml $SUPRESS_OUTPUT
   sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml $SUPRESS_OUTPUT
@@ -181,6 +185,9 @@ if [ "$1" = "setup" ] ; then
   # import container image
   ctr images import container/images.tar
 
+  # add localregistry service
+  ./localregistry.sh add
+
   # cleanup
-  rm -rf deb/ container/
+  rm -rf deb/ container/ localregistry.sh
 fi
