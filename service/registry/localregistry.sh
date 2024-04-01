@@ -2,8 +2,6 @@
 
 NAME="localregistry"
 VERSION="0.1.0"
-SUPRESS_OUTPUT="2>&1>/dev/null"
-SUPRESS_STDOUT="1>/dev/null"
 SUPRESS_STDERR="2>/dev/null"
 
 ############################################################
@@ -183,11 +181,11 @@ if [ "$1" = "setup" ] ; then
   systemctl restart containerd 2>&1>/dev/null
 
   # import container image
-  ctr images import container/images.tar
+  gum spin --title "Import container images ..." -- ctr images import container/images.tar
 
   # add localregistry service
-  ./localregistry.sh add
+  gum spin --title "Add service localregistry ..." -- ./localregistry.sh add
 
   # cleanup
-  #rm -rf deb/ container/ 
+  rm -rf deb/ container/ localregistry.sh
 fi
