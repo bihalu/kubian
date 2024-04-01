@@ -172,15 +172,15 @@ fi
 # setup package
 if [ "$1" = "setup" ] ; then
 
-  dpkg --install deb/gum_0.11.0_amd64.deb \$SUPRESS_OUTPUT
+  dpkg --install deb/gum_0.11.0_amd64.deb 
 
   # install containerd
   PACKAGES=$(find deb -name "*.deb")
   gum spin --title "Install packages ..." -- dpkg --install \$PACKAGES
 
-  containerd config default | tee /etc/containerd/config.toml $SUPRESS_OUTPUT
-  sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml $SUPRESS_OUTPUT
-  systemctl restart containerd $SUPRESS_OUTPUT
+  containerd config default | tee /etc/containerd/config.toml 
+  sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml 
+  systemctl restart containerd 
 
   # import container image
   ctr images import container/images.tar
@@ -189,5 +189,5 @@ if [ "$1" = "setup" ] ; then
   ./localregistry.sh add
 
   # cleanup
-  rm -rf deb/ container/ 
+  #rm -rf deb/ container/ 
 fi
