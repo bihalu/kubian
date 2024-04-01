@@ -172,15 +172,15 @@ fi
 # setup package
 if [ "$1" = "setup" ] ; then
 
-  dpkg --install deb/gum_0.11.0_amd64.deb 
+  dpkg --install deb/gum_0.11.0_amd64.deb $SUPRESS_OUTPUT
 
   # install containerd
   PACKAGES=$(find deb -name "*.deb")
-  gum spin --title "Install packages ..." -- dpkg --install \$PACKAGES
+  gum spin --title "Install packages ..." -- dpkg --install $PACKAGES
 
-  containerd config default | tee /etc/containerd/config.toml 
-  sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml 
-  systemctl restart containerd 
+  containerd config default | tee /etc/containerd/config.toml $SUPRESS_OUTPUT
+  sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml $SUPRESS_OUTPUT
+  systemctl restart containerd $SUPRESS_OUTPUT
 
   # import container image
   ctr images import container/images.tar
