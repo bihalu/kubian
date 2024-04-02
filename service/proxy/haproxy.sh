@@ -2,9 +2,6 @@
 
 NAME="haproxy"
 VERSION="0.1.0"
-SUPRESS_OUTPUT="2>&1>/dev/null"
-SUPRESS_STDOUT="1>/dev/null"
-SUPRESS_STDERR="2>/dev/null"
 
 ############################################################
 # status service
@@ -94,10 +91,17 @@ if [ "$1" = "add" ] ; then
 
     backend localregistry
       option httpchk
-      server controlplane1 192.168.178.195:5000 check  inter 10s  fall 5  rise 5
-      server controlplane2 192.168.178.196:5000 check  inter 10s  fall 5  rise 5
-      server controlplane3 192.168.178.197:5000 check  inter 10s  fall 5  rise 5
   EOL_HAPROXY_CONFIG
+
+  COUNT=1
+  echo "Enter IP Addresses for all registries (empty input when done):"
+  while : ; do
+    IP_ADDRESS=$(gum input --placeholder "IP Address")
+    [[ -z "$IP_ADDRESS" ]] && break
+
+    echo "    server controlplane$COUNT $IP_ADDRESS check  inter 10s  fall 5  rise 5" >> /usr/local/etc/haproxy/haproxy.cfg
+    COUNT+=1
+  done
 
   cp $0 /etc/systemd/system/
   systemctl daemon-reload
@@ -164,6 +168,8 @@ if [ "$1" = "build" ] ; then
     fi 
   done
 
+  wget https://github.com/charmbracelet/gum/releases/download/v0.11.0/gum_0.11.0_amd64.deb -P deb
+
   mkdir -p container
 
   ctr image pull docker.io/library/haproxy:2.9-alpine --platform amd64
@@ -179,7 +185,7 @@ if [ "$1" = "build" ] ; then
   echo '#!/bin/bash' > $SELF_EXTRACTABLE
   echo 'echo Extract archive ...' >> $SELF_EXTRACTABLE
   echo -n 'dd bs=`head -5 $0 | wc -c` skip=1 if=$0 ' >> $SELF_EXTRACTABLE
-  echo -n "$SUPRESS_STDERR" >> $SELF_EXTRACTABLE
+  echo -n "2>/dev/null" >> $SELF_EXTRACTABLE
   echo ' | gunzip -c | tar -x' >> $SELF_EXTRACTABLE
   echo 'exec ./haproxy.sh setup' >> $SELF_EXTRACTABLE
   echo '######################################################################' >> $SELF_EXTRACTABLE
@@ -193,17 +199,25 @@ fi
 # setup package
 if [ "$1" = "setup" ] ; then
 
+  dpkg --install deb/gum_0.11.0_amd64.deb 2>&1>/dev/null
+
   # install containerd
   PACKAGES=$(find deb -name "*.deb")
-  dpkg --install $PACKAGES $SUPRESS_OUTPUT
+  gum spin --title "Install packages ..." -- dpkg --install $PACKAGES
+  echo "Install packages ..."
 
-  containerd config default | tee /etc/containerd/config.toml $SUPRESS_OUTPUT
-  sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml $SUPRESS_OUTPUT
-  systemctl restart containerd $SUPRESS_OUTPUT
+  containerd config default | tee /etc/containerd/config.toml 2>&1>/dev/null
+  sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml 2>&1>/dev/null
+  systemctl restart containerd 2>&1>/dev/null
 
   # import container image
-  ctr images import container/images.tar --platform amd64
+  gum spin --title "Import container images ..." -- ctr images import container/images.tar --platform amd64
+  echo "Import container images ..."
+
+  # add haproxy service
+  gum spin --title "Add service haproxy ..." -- ./haproxy.sh add
+  echo "Add service haproxy ..."
 
   # cleanup
-  rm -rf deb/ container/
+  rm -rf deb/ container/ haproxy.sh
 fi

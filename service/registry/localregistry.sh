@@ -2,7 +2,6 @@
 
 NAME="localregistry"
 VERSION="0.1.0"
-SUPRESS_STDERR="2>/dev/null"
 
 ############################################################
 # status service
@@ -156,7 +155,7 @@ if [ "$1" = "build" ] ; then
   echo '#!/bin/bash' > $SELF_EXTRACTABLE
   echo 'echo Extract archive ...' >> $SELF_EXTRACTABLE
   echo -n 'dd bs=`head -5 $0 | wc -c` skip=1 if=$0 ' >> $SELF_EXTRACTABLE
-  echo -n "$SUPRESS_STDERR" >> $SELF_EXTRACTABLE
+  echo -n "2>/dev/null" >> $SELF_EXTRACTABLE
   echo ' | gunzip -c | tar -x' >> $SELF_EXTRACTABLE
   echo 'exec ./localregistry.sh setup' >> $SELF_EXTRACTABLE
   echo '######################################################################' >> $SELF_EXTRACTABLE
@@ -175,6 +174,7 @@ if [ "$1" = "setup" ] ; then
   # install containerd
   PACKAGES=$(find deb -name "*.deb")
   gum spin --title "Install packages ..." -- dpkg --install $PACKAGES
+  echo "Install packages ..."
 
   containerd config default | tee /etc/containerd/config.toml 2>&1>/dev/null
   sed -i 's/pause:3../pause:3.9/' /etc/containerd/config.toml 2>&1>/dev/null
@@ -182,9 +182,11 @@ if [ "$1" = "setup" ] ; then
 
   # import container image
   gum spin --title "Import container images ..." -- ctr images import container/images.tar
+  echo "Import container images ..."
 
   # add localregistry service
   gum spin --title "Add service localregistry ..." -- ./localregistry.sh add
+  echo "Add service localregistry ..."
 
   # cleanup
   rm -rf deb/ container/ localregistry.sh
