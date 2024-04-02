@@ -91,6 +91,7 @@ if [ "$1" = "add" ] ; then
 
     backend localregistry
       option httpchk
+      #server controlplane1 192.168.178.195:5000 check  inter 10s  fall 5  rise 5
   EOL_HAPROXY_CONFIG
 
   COUNT=1
@@ -99,7 +100,7 @@ if [ "$1" = "add" ] ; then
     IP_ADDRESS=$(gum input --placeholder "IP Address")
     [[ -z "$IP_ADDRESS" ]] && break
 
-    echo "    server controlplane$COUNT $IP_ADDRESS check  inter 10s  fall 5  rise 5" >> /usr/local/etc/haproxy/haproxy.cfg
+    echo "  server controlplane$COUNT $IP_ADDRESS:5000 check  inter 10s  fall 5  rise 5" >> /usr/local/etc/haproxy/haproxy.cfg
     COUNT+=1
   done
 
