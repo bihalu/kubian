@@ -31,7 +31,6 @@ if [ "$1" = "start" ] ; then
     --detach \
     --mount type=bind,src=/usr/local/etc/haproxy,dst=/usr/local/etc/haproxy,options=rbind:ro \
     docker.io/library/haproxy:2.9-alpine haproxy
-
   if [ $? -ne 0 ] ; then
     exit $?
   fi
@@ -91,7 +90,6 @@ if [ "$1" = "add" ] ; then
 
     backend localregistry
       option httpchk
-      #server controlplane1 192.168.178.195:5000 check  inter 10s  fall 5  rise 5
   EOL_HAPROXY_CONFIG
 
   COUNT=1
@@ -99,20 +97,19 @@ if [ "$1" = "add" ] ; then
   while : ; do
     IP_ADDRESS=$(gum input --placeholder "IP Address")
     [[ -z "$IP_ADDRESS" ]] && break
-
     echo "  server controlplane$COUNT $IP_ADDRESS:5000 check  inter 10s  fall 5  rise 5" >> /usr/local/etc/haproxy/haproxy.cfg
     COUNT+=1
   done
 
   cp $0 /etc/systemd/system/
   systemctl daemon-reload
+  systemctl enable haproxy --now
 fi
 
 ############################################################
 # remove service
 if [ "$1" = "remove" ] ; then
-  systemctl stop haproxy
-  systemctl disable haproxy
+  systemctl disable haproxy --now
   rm -f /etc/systemd/system/haproxy.service
   rm -f /etc/systemd/system/haproxy.sh
   systemctl daemon-reload

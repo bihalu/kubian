@@ -64,10 +64,9 @@ if [ "$1" = "add" ] ; then
   Type=forking
   Restart=on-failure
   RestartSec=3
-  ExecStart=/etc/systemd/system/localregistry.sh start
   PIDFile=/run/localregistry.pid
+  ExecStart=/etc/systemd/system/localregistry.sh start
   ExecStop=/etc/systemd/system/localregistry.sh stop
-
   [Install]
   WantedBy=multi-user.target
   EOL_LOCALREGISTRY_SERVICE
