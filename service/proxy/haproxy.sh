@@ -215,8 +215,8 @@ if [ "$1" = "setup" ] ; then
   echo "Import container images ..."
 
   # add haproxy service
-  gum spin --title "Add service haproxy ..." -- ./haproxy.sh add
   echo "Add service haproxy ..."
+  ./haproxy.sh add
 
   # cleanup
   rm -rf deb/ container/ haproxy.sh

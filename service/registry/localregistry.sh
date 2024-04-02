@@ -185,8 +185,8 @@ if [ "$1" = "setup" ] ; then
   echo "Import container images ..."
 
   # add localregistry service
-  gum spin --title "Add service localregistry ..." -- ./localregistry.sh add
   echo "Add service localregistry ..."
+  ./localregistry.sh add
 
   # cleanup
   rm -rf deb/ container/ localregistry.sh
