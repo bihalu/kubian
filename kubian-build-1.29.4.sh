@@ -74,8 +74,8 @@ jq 1.6-2.1 amd64
 libjq1:amd64 1.6-2.1 amd64
 libonig5:amd64 6.9.8-1 amd64
 # curl
-curl 7.88.1-10+deb12u5 amd64
-libcurl4:amd64 7.88.1-10+deb12u5 amd64
+curl 7.88.1-10+deb12u6 amd64
+libcurl4:amd64 7.88.1-10+deb12u6 amd64
 # ethtool
 ethtool 1:6.1-1 amd64
 # socat
