@@ -176,8 +176,6 @@ quay.io/jetstack/cert-manager-cainjector:v1.15.2
 quay.io/jetstack/cert-manager-controller:v1.15.2
 quay.io/jetstack/cert-manager-webhook:v1.15.2
 quay.io/jetstack/cert-manager-acmesolver:v1.15.2
-quay.io/jetstack/cert-manager-ctl:v1.15.2
-quay.io/jetstack/cert-manager-webhook:v1.15.2
 ################################################################################
 # ingress-nginx v1.11.1 -> https://github.com/kubernetes/ingress-nginx/blob/helm-chart-4.11.1/charts/ingress-nginx/values.yaml#L29
 registry.k8s.io/ingress-nginx/controller:v1.11.1
