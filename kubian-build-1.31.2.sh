@@ -393,7 +393,7 @@ SETUP_START=\$(date +%s)
 
 ################################################################################
 # install gum (silent ;-)
-dpkg --install deb/gum_0.14.0_amd64.deb $SUPRESS_OUTPUT
+dpkg --install deb/gum_0.14.5_amd64.deb $SUPRESS_OUTPUT
 
 ################################################################################
 # install packages
