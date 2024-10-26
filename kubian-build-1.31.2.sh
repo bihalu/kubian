@@ -243,7 +243,7 @@ ctr images export container/images.tar $CONTAINER_IMAGES
 # helm charts -> chart_url chart_repo chart_name chart_version
 readarray -t HELM_CHARTS <<EOL_HELM_CHARTS
 https://openebs.github.io/charts openebs openebs 3.10.0
-https://charts.jetstack.io jetstack cert-manager 1.16.1
+https://charts.jetstack.io jetstack cert-manager v1.16.1
 https://kubernetes.github.io/ingress-nginx ingress-nginx ingress-nginx 4.11.1
 https://projectcalico.docs.tigera.io/charts projectcalico tigera-operator v3.28.2
 https://kubernetes-sigs.github.io/metrics-server metrics-server metrics-server 3.12.2
@@ -651,10 +651,10 @@ if [ \$SINGLE = true ] ; then
 
   ################################################################################
   # install cert-manager
-  gum spin --title "Install helm cert-manager ..." -- helm upgrade --install cert-manager helm/cert-manager-1.16.1.tgz \
+  gum spin --title "Install helm cert-manager ..." -- helm upgrade --install cert-manager helm/cert-manager-v1.16.1.tgz \
     --create-namespace \
     --namespace cert-manager \
-    --version 1.16.1 \
+    --version v1.16.1 \
     --set installCRDs=true
 
   kubectl apply -f artefact/issuer-letsencrypt.yaml $SUPRESS_OUTPUT
@@ -742,10 +742,10 @@ if [ \$JOIN = true ] && [ \$WORKER = true ] ; then
 
   ################################################################################
   # install cert-manager
-  gum spin --title "Install helm cert-manager ..." -- helm upgrade --install cert-manager helm/cert-manager-1.16.1.tgz \
+  gum spin --title "Install helm cert-manager ..." -- helm upgrade --install cert-manager helm/cert-manager-v1.16.1.tgz \
     --create-namespace \
     --namespace cert-manager \
-    --version 1.16.1 \
+    --version v1.16.1 \
     --set installCRDs=true
   
   BETWEEN=\$(date +%s)
