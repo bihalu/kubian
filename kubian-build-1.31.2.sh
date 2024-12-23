@@ -709,6 +709,7 @@ if [ \$JOIN = true ] && [ \$WORKER = true ] ; then
     --set mayastor.enabled=true \
     --set mayastor.etcd.replicaCount=1 \
     --set mayastor.etcd.persistence.storageClass=mayastor-etcd-localpv \
+    --set mayastor.io_engine.envcontext="iova-mode=pa" \
     --reuse-values \
     --version 3.10.0
   
