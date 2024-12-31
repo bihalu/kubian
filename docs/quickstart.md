@@ -8,14 +8,14 @@ cd ~
 apt install -y git
 git clone https://github.com/bihalu/kubian.git
 cd kubian
-./kubian-build-1.30.3.sh
+./kubian-build-1.31.2.sh
 ```
 Takes about 15 minutes ...  
 coffe break ;-)
 
 ## 2. Setup kubernetes single node cluster 
 ```bash
-./kubian-setup-1.30.3.tgz.self init single
+./kubian-setup-1.31.2.tgz.self init single
 ```
 Takes about 5 minutes ...  
 almost done   
