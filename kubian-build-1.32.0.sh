@@ -168,6 +168,11 @@ readarray -t IMAGES <<EOL_IMAGES
 docker.io/openebs/lvm-driver:1.6.1
 docker.io/openebs/provisioner-localpv:4.1.1
 docker.io/openebs/zfs-driver:2.6.2
+registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.8.0
+registry.k8s.io/sig-storage/csi-provisioner:v3.5.0
+registry.k8s.io/sig-storage/csi-resizer:v1.8.0
+registry.k8s.io/sig-storage/csi-snapshotter:v6.2.2
+registry.k8s.io/sig-storage/snapshot-controller:v6.2.2
 #docker.io/openebs/linux-utils:4.1.0
 #docker.io/openebs/node-disk-manager:2.1.0
 #docker.io/openebs/node-disk-operator:2.1.0
@@ -177,13 +182,13 @@ docker.io/openebs/zfs-driver:2.6.2
 quay.io/jetstack/cert-manager-cainjector:v1.16.2
 quay.io/jetstack/cert-manager-controller:v1.16.2
 quay.io/jetstack/cert-manager-webhook:v1.16.2
-quay.io/jetstack/cert-manager-acmesolver:v1.16.2
+#quay.io/jetstack/cert-manager-acmesolver:v1.16.2
 ################################################################################
 # https://github.com/kubernetes/ingress-nginx?tab=readme-ov-file#changelog
 # ingress-nginx v1.12.0 -> https://github.com/kubernetes/ingress-nginx/blob/helm-chart-4.12.0/charts/ingress-nginx/values.yaml#L29
 registry.k8s.io/ingress-nginx/controller:v1.12.0
-registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.5.0
-registry.k8s.io/defaultbackend-amd64:1.5
+#registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.5.0
+#registry.k8s.io/defaultbackend-amd64:1.5
 ################################################################################
 # metrics-server v0.7.2 -> https://artifacthub.io/packages/helm/metrics-server/metrics-server/3.12.2
 registry.k8s.io/metrics-server/metrics-server:v0.7.2
