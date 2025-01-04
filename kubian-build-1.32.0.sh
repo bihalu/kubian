@@ -165,11 +165,13 @@ wget https://github.com/charmbracelet/gum/releases/download/v0.14.5/gum_0.14.5_a
 readarray -t IMAGES <<EOL_IMAGES
 ################################################################################
 # openebs 4.1.1 -> https://openebs.github.io/openebs/
+docker.io/openebs/lvm-driver:1.6.1
 docker.io/openebs/provisioner-localpv:4.1.1
-docker.io/openebs/linux-utils:4.1.0
-docker.io/openebs/node-disk-manager:2.1.0
-docker.io/openebs/node-disk-operator:2.1.0
-docker.io/openebs/node-disk-exporter:2.1.0
+docker.io/openebs/zfs-driver:2.6.2
+#docker.io/openebs/linux-utils:4.1.0
+#docker.io/openebs/node-disk-manager:2.1.0
+#docker.io/openebs/node-disk-operator:2.1.0
+#docker.io/openebs/node-disk-exporter:2.1.0
 ################################################################################
 # cert-manager 1.16.2 -> https://artifacthub.io/packages/helm/cert-manager/cert-manager/1.16.2
 quay.io/jetstack/cert-manager-cainjector:v1.16.2
