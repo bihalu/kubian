@@ -299,13 +299,6 @@ else
   wget https://github.com/vmware-tanzu/velero/releases/download/v1.15.1/velero-v1.15.1-linux-amd64.tar.gz -P artefact
 fi
 
-# download calico cni-plugin v3.20.6 -> https://github.com/projectcalico/cni-plugin/releases/
-#if [ -f artefact/calico ] ; then
-#  echo "file exists artefact/calico" 
-#else
-#  wget https://github.com/projectcalico/cni-plugin/releases/download/v3.20.6/calico-amd64 -O artefact/calico
-#fi
-
 # download yq -> https://github.com/mikefarah/yq/releases
 if [ -f artefact/yq ] ; then
   echo "file exists artefact/yq" 
@@ -527,11 +520,6 @@ tar Cxzf /tmp artefact/velero-v1.15.1-linux-amd64.tar.gz $SUPRESS_STDERR && cp /
 cp artefact/yq /usr/local/bin/yq && chmod 755 /usr/local/bin/yq
 
 ################################################################################
-# install calico cni-plugins
-#cp artefact/calico /opt/cni/bin/ && chmod 755 /opt/cni/bin/calico
-#cp artefact/calico /opt/cni/bin/calico-ipam && chmod 755 /opt/cni/bin/calico-ipam
-
-################################################################################
 # enable kubelet services
 systemctl enable kubelet
 
@@ -617,11 +605,12 @@ if [ \$SINGLE = true ] ; then
   printf "Install helm tigera-operator (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
 
   ################################################################################
-  # install openebs openebs 3.10.0
-  gum spin --title "Install helm openebs ..." -- helm upgrade --install openebs helm/openebs-3.10.0.tgz \
+  # install openebs openebs 4.1.1
+  gum spin --title "Install helm openebs ..." -- helm upgrade --install openebs helm/openebs-4.1.1.tgz \
     --create-namespace \
     --namespace openebs \
-    --version 3.10.0
+    --set engines.replicated.mayastor.enabled=false \
+    --version 4.1.1
   
   BETWEEN=\$(date +%s)
   BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
@@ -699,76 +688,6 @@ if [ \$JOIN = true ] && [ \$WORKER = true ] ; then
     echo "ERROR: can't connect to \$ARG3 via ssh"
     exit 1
   fi
-
-  ################################################################################
-  # install openebs openebs 3.10.0 (mayastor)
-  gum spin --title "Install helm openebs (mayastor) ..." -- helm upgrade --install openebs helm/openebs-3.10.0.tgz \
-    --create-namespace \
-    --namespace openebs \
-    --set mayastor.enabled=true \
-    --set mayastor.etcd.replicaCount=1 \
-    --set mayastor.etcd.persistence.storageClass=mayastor-etcd-localpv \
-    --set mayastor.io_engine.envcontext="iova-mode=pa" \
-    --reuse-values \
-    --version 3.10.0
-  
-  BETWEEN=\$(date +%s)
-  BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
-  BETWEEN_SECONDS=\$((\$BETWEEN - \$SETUP_START - (\$BETWEEN_MINUTES * 60)))
-
-  printf "Install helm openebs (mayastor) (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
-
-  # label node for mayastor usage
-  kubectl label node \$HOSTNAME openebs.io/engine=mayastor $SUPRESS_OUTPUT
-
-  # set default storage class
-  kubectl patch storageclass openebs-single-replica -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}' $SUPRESS_OUTPUT
-
-  ################################################################################
-  # install ingress-nginx controller
-  gum spin --title "Install helm ingress-nginx ..." -- helm upgrade --install ingress-nginx helm/ingress-nginx-4.12.0.tgz \
-    --create-namespace \
-    --namespace ingress-nginx \
-    --version 4.12.0 \
-    --set controller.service.type=NodePort \
-    --set controller.service.nodePorts.http=30080 \
-    --set controller.service.nodePorts.https=30443
-
-  BETWEEN=\$(date +%s)
-  BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
-  BETWEEN_SECONDS=\$((\$BETWEEN - \$SETUP_START - (\$BETWEEN_MINUTES * 60)))
-
-  printf "Install helm ingress-nginx (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
-
-  ################################################################################
-  # install cert-manager
-  gum spin --title "Install helm cert-manager ..." -- helm upgrade --install cert-manager helm/cert-manager-v1.16.2.tgz \
-    --create-namespace \
-    --namespace cert-manager \
-    --version v1.16.2 \
-    --set installCRDs=true
-  
-  BETWEEN=\$(date +%s)
-  BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
-  BETWEEN_SECONDS=\$((\$BETWEEN - \$SETUP_START - (\$BETWEEN_MINUTES * 60)))
-
-  printf "Install helm cert-manager (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
-
-  kubectl apply -f artefact/issuer-letsencrypt.yaml $SUPRESS_OUTPUT
-
-  ################################################################################
-  # install metrics-server 3.12.2
-  gum spin --title "Install helm metrics-server ..." -- helm upgrade --install metrics-server helm/metrics-server-3.12.2.tgz \
-    --create-namespace \
-    --namespace monitoring \
-    --version 3.12.2 \
-    --set args="{--kubelet-insecure-tls}"
-
-  BETWEEN=\$(date +%s)
-  BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
-  BETWEEN_SECONDS=\$((\$BETWEEN - \$SETUP_START - (\$BETWEEN_MINUTES * 60)))
-
-  printf "Install helm metrics-server (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
 fi
 
 ################################################################################
