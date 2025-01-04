@@ -86,7 +86,7 @@ socat 1.7.4.4-2 amd64
 # conntrack
 conntrack 1:1.4.7-1+b2 amd64
 # cri-tools
-cri-tools 1.32.1-1.1 amd64
+cri-tools 1.32.0-1.1 amd64
 # kubernetes
 kubeadm 1.32.0-1.1 amd64
 kubectl 1.32.0-1.1 amd64
