@@ -23,18 +23,18 @@ velero install \
   --use-node-agent \
   --default-volumes-to-fs-backup \
   --provider aws \
-  --plugins velero/velero-plugin-for-aws:v1.8.0 \
+  --plugins velero/velero-plugin-for-aws:v1.11.1 \
   --bucket velero \
   --secret-file ~/.credentials-velero \
   --use-volume-snapshots=false \
-  --backup-location-config region=minio,s3ForcePathStyle=true,s3Url=http://192.168.178.61:30002
+  --backup-location-config region=minio,s3ForcePathStyle=true,s3Url=http://192.168.178.60:30002
 ```
 
 ## 2. Create backup
 I highly recommend installing each application in its own namespace.  
 Creating a backup is then easy.
 ```bash
-velero backup create wordpress-backup-20231002 --include-namespaces wordpress
+velero backup create wordpress-backup-20250104 --include-namespaces wordpress
 ```
 
 ### 2.1. Create backup schedule
