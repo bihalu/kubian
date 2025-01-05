@@ -62,6 +62,22 @@ if [ $? != 0 ] ; then
 fi
 
 ################################################################################
+# age releases -> https://github.com/FiloSottile/age/releases
+# install age and age-keygen
+which age
+if [ $? != 0 ] ; then
+  wget https://github.com/FiloSottile/age/releases/download/v1.2.1/age-v1.2.1-linux-amd64.tar.gz -O - | tar Cxzf /tmp - && cp /tmp/age/age /tmp/age/age-keygen /usr/local/bin/
+fi
+
+################################################################################
+# sops releases -> https://github.com/getsops/sops/releases
+# install sops
+which sops
+if [ $? != 0 ] ; then
+  wget https://github.com/getsops/sops/releases/download/v3.9.3/sops-v3.9.3.linux.amd64 -O /usr/local/bin/sops && chmod +x /usr/local/bin/sops
+fi
+
+################################################################################
 # deb packages for airgap installation -> https://packages.debian.org
 # installed packages -> dpkg -l | sed '/^ii/!d' | tr -s ' ' | cut -d ' ' -f 2,3,4
 readarray -t PACKAGES <<EOL_PACKAGES
@@ -241,7 +257,7 @@ mkdir -p container
 # cleanup container images tar file
 [ -f container/images.tar ] && rm -f container/images.tar
 
-# export all container images to images.tar 
+# export all container images to images.tar
 echo "Be patient exporting container images ..."
 ctr images export container/images.tar $CONTAINER_IMAGES
 
@@ -272,7 +288,7 @@ for CHART in "${HELM_CHARTS[@]}" ; do
   [ -f helm/$CHART_NAME-$CHART_VERSION.tgz ] && continue
 
   # add helm repo
-  helm repo add $CHART_REPO $CHART_URL 
+  helm repo add $CHART_REPO $CHART_URL
 
   # pull helm chart
   helm pull $CHART_REPO/$CHART_NAME --version $CHART_VERSION --destination helm/
@@ -287,23 +303,30 @@ mkdir -p artefact
 
 # download helm v3.16.4 -> https://github.com/helm/helm/releases/tag/v3.16.4
 if [ -f artefact/helm-v3.16.4-linux-amd64.tar.gz ] ; then
-  echo "file exists artefact/helm-v3.16.4-linux-amd64.tar.gz" 
+  echo "file exists artefact/helm-v3.16.4-linux-amd64.tar.gz"
 else
   wget https://get.helm.sh/helm-v3.16.4-linux-amd64.tar.gz -P artefact
 fi
 
 # download k9s v0.32.7 -> https://github.com/derailed/k9s/releases/tag/v0.32.7
 if [ -f artefact/k9s_Linux_amd64.tar.gz ] ; then
-  echo "file exists artefact/k9s_Linux_amd64.tar.gz" 
+  echo "file exists artefact/k9s_Linux_amd64.tar.gz"
 else
   wget https://github.com/derailed/k9s/releases/download/v0.32.7/k9s_Linux_amd64.tar.gz -P artefact
 fi
 
 # download velero -> https://github.com/vmware-tanzu/velero/releases/tag/v1.15.1
 if [ -f artefact/velero-v1.15.1-linux-amd64.tar.gz ] ; then
-  echo "file exists artefact/velero-v1.15.1-linux-amd64.tar.gz" 
+  echo "file exists artefact/velero-v1.15.1-linux-amd64.tar.gz"
 else
   wget https://github.com/vmware-tanzu/velero/releases/download/v1.15.1/velero-v1.15.1-linux-amd64.tar.gz -P artefact
+fi
+
+# download age -> https://github.com/FiloSottile/age/releases/tag/v1.2.1
+if [ -f artefact/age-v1.2.1-linux-amd64.tar.gz ] ; then
+  echo "file exists artefact/age-v1.2.1-linux-amd64.tar.gz"
+else
+  wget https://github.com/FiloSottile/age/releases/download/v1.2.1/age-v1.2.1-linux-amd64.tar.gz -P artefact
 fi
 
 # download yq -> https://github.com/mikefarah/yq/releases
@@ -311,6 +334,13 @@ if [ -f artefact/yq ] ; then
   echo "file exists artefact/yq" 
 else
   wget https://github.com/mikefarah/yq/releases/download/v4.44.6/yq_linux_amd64 -O artefact/yq
+fi
+
+# download sops -> https://github.com/getsops/sops/releases
+if [ -f artefact/sops ] ; then
+  echo "file exists artefact/sops" 
+else
+  wget https://github.com/getsops/sops/releases/download/v3.9.3/sops-v3.9.3.linux.amd64 -O artefact/sops
 fi
 
 # issuer for cert-manager (letsencrypt) -> issuer-letsencrypt.yaml
@@ -523,8 +553,16 @@ tar Cxzf /tmp artefact/k9s_Linux_amd64.tar.gz $SUPRESS_STDERR && cp /tmp/k9s /us
 tar Cxzf /tmp artefact/velero-v1.15.1-linux-amd64.tar.gz $SUPRESS_STDERR && cp /tmp/velero-v1.15.1-linux-amd64/velero /usr/local/bin/
 
 ################################################################################
+# install age and age-keygen
+tar Cxzf /tmp artefact/age-v1.2.1-linux-amd64.tar.gz $SUPRESS_STDERR && cp /tmp/age/age /tmp/age/age-keygen /usr/local/bin/
+
+################################################################################
 # install yq
 cp artefact/yq /usr/local/bin/yq && chmod 755 /usr/local/bin/yq
+
+################################################################################
+# install sops
+cp artefact/sops /usr/local/bin/sops && chmod 755 /usr/local/bin/sops
 
 ################################################################################
 # enable kubelet services
