@@ -342,38 +342,37 @@ fi
 
 # static nfs-server pod
 tee artefact/nfs-server-pod.yaml <<EOL_NFS_SERVER_POD
-pods:
-- apiVersion: v1
-  kind: Pod
-  metadata:
+kind: Pod
+apiVersion: v1
+metadata:
+  name: nfs-server
+  namespace: kube-system
+  labels:
+    app: nfs-server
+spec:
+  containers:
+  - image: docker.io/itsthenetwork/nfs-server-alpine:12
     name: nfs-server
-    namespace: kube-system
-    labels:
-      app: nfs-server
-  spec:
-    containers:
-    - image: docker.io/itsthenetwork/nfs-server-alpine:12
-      name: nfs-server
-      ports:
-      - name: tcp-2049 
-        containerPort: 2049
-        protocol: TCP
-      - name: udp-111
-        containerPort: 111
-        protocol: UDP
-      volumeMounts:
-      - mountPath: /data
-        name: nfs-storage
-      env:
-      - name: SHARED_DIRECTORY
-        value: /data
-      securityContext:
-        privileged: true
-    volumes:
-    - hostPath:
-        path: /var/local/nfs
-      type: DirectoryOrCreate
+    ports:
+    - name: tcp-2049 
+      containerPort: 2049
+      protocol: TCP
+    - name: udp-111
+      containerPort: 111
+      protocol: UDP
+    volumeMounts:
+    - mountPath: /data
       name: nfs-storage
+    env:
+    - name: SHARED_DIRECTORY
+      value: /data
+    securityContext:
+      privileged: true
+  volumes:
+  - hostPath:
+      path: /var/local/nfs
+    type: DirectoryOrCreate
+    name: nfs-storage
 EOL_NFS_SERVER_POD
 
 # nfs-server service
@@ -397,6 +396,28 @@ spec:
     port: 111
     protocol: UDP
 EOL_NFS_SERVER_SERVICE
+
+# nfs-csi storageclass
+tee artefact/nfs-csi-storageclass.yaml <<EOL_NFS_CSI_STORAGECLASS
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: nfs-csi
+  annotations:
+    "storageclass.kubernetes.io/is-default-class": "true"
+provisioner: nfs.csi.k8s.io
+parameters:
+  server: nfs-server.kube-system.svc.cluster.local
+  share: /
+  # csi.storage.k8s.io/provisioner-secret is only needed for providing mountOptions in DeleteVolume
+  # csi.storage.k8s.io/provisioner-secret-name: "mount-options"
+  # csi.storage.k8s.io/provisioner-secret-namespace: "default"
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+allowVolumeExpansion: true
+mountOptions:
+  - nfsvers=4.1
+EOL_NFS_CSI_STORAGECLASS
 
 # issuer for cert-manager (letsencrypt) -> issuer-letsencrypt.yaml
 tee artefact/issuer-letsencrypt.yaml <<EOL_ISSUER
@@ -729,18 +750,16 @@ if [ \$SINGLE = true ] ; then
     # install csi-driver-nfs
     gum spin --title "Install helm csi-driver-nfs ..." -- helm upgrade --install csi-driver-nfs helm/csi-driver-nfs-v4.9.0.tgz \
       --namespace kube-system \
-      --set storageClass.create=true \
-      --set storageClass.create.parameters.server="nfs-server.kube-system.svc.cluster.local" \
       --version v4.9.0
-
-    # set default storage class
-    kubectl patch storageclass nfs-csi -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}' $SUPRESS_OUTPUT
 
     # static nfs-server pod
     cp artefact/nfs-server-pod.yaml /etc/kubernetes/manifests/
 
     # nfs-server service
     kubectl apply -f artefact/nfs-server-service.yaml $SUPRESS_OUTPUT
+
+    # nfs-csi storage class
+    kubectl apply -f artefact/nfs-csi-storageclass.yaml $SUPRESS_OUTPUT
 
     BETWEEN=\$(date +%s)
     BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
