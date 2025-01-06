@@ -1,7 +1,7 @@
 #!/bin/bash
 
 NAME="scan"
-VERSION="0.50.1"
+VERSION="0.58.1"
 RESULT="scan-"`date +"%Y-%m-%d-%H%M"`".txt"
 
 # Download trivy scanner

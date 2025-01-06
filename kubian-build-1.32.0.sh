@@ -222,7 +222,7 @@ registry.k8s.io/kube-proxy:v1.32.0
 registry.k8s.io/kube-scheduler:v1.32.0
 registry.k8s.io/coredns/coredns:v1.11.3
 registry.k8s.io/etcd:3.5.16-0
-registry.k8s.io/pause:3.10
+#registry.k8s.io/pause:3.10
 ################################################################################
 # velero -> https://github.com/vmware-tanzu/velero/releases
 # aws plugin compatibility -> https://github.com/vmware-tanzu/velero-plugin-for-aws?tab=readme-ov-file#compatibility
@@ -236,7 +236,7 @@ registry.k8s.io/sig-storage/csi-provisioner:v5.0.2
 registry.k8s.io/sig-storage/csi-snapshotter:v8.0.1
 registry.k8s.io/sig-storage/livenessprobe:v2.13.1
 registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.11.1
-registry.k8s.io/sig-storage/snapshot-controller:v8.0.1
+#registry.k8s.io/sig-storage/snapshot-controller:v8.0.1
 EOL_IMAGES
 
 CONTAINER_IMAGES=""
