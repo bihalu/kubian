@@ -62,14 +62,6 @@ if [ $? != 0 ] ; then
 fi
 
 ################################################################################
-# age releases -> https://github.com/FiloSottile/age/releases
-# install age and age-keygen
-which age
-if [ $? != 0 ] ; then
-  wget https://github.com/FiloSottile/age/releases/download/v1.2.1/age-v1.2.1-linux-amd64.tar.gz -O - | tar Cxzf /tmp - && cp /tmp/age/age /tmp/age/age-keygen /usr/local/bin/
-fi
-
-################################################################################
 # sops releases -> https://github.com/getsops/sops/releases
 # install sops
 which sops
@@ -139,6 +131,8 @@ open-iscsi 2.1.8-1 amd64
 # wireguard
 wireguard 1.0.20210914-1 all
 wireguard-tools 1.0.20210914-1+b1 amd64
+# age
+age 1.1.1-1+b3 amd64
 EOL_PACKAGES
 
 mkdir -p deb
@@ -234,6 +228,15 @@ registry.k8s.io/pause:3.10
 # aws plugin compatibility -> https://github.com/vmware-tanzu/velero-plugin-for-aws?tab=readme-ov-file#compatibility
 docker.io/velero/velero:v1.15.1
 docker.io/velero/velero-plugin-for-aws:v1.11.1
+################################################################################
+# nfs-server -> https://hub.docker.com/r/itsthenetwork/nfs-server-alpine
+docker.io/itsthenetwork/nfs-server-alpine:12
+registry.k8s.io/sig-storage/nfsplugin:v4.9.0
+registry.k8s.io/sig-storage/csi-provisioner:v5.0.2
+registry.k8s.io/sig-storage/csi-snapshotter:v8.0.1
+registry.k8s.io/sig-storage/livenessprobe:v2.13.1
+registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.11.1
+registry.k8s.io/sig-storage/snapshot-controller:v8.0.1
 EOL_IMAGES
 
 CONTAINER_IMAGES=""
@@ -265,6 +268,7 @@ ctr images export container/images.tar $CONTAINER_IMAGES
 # helm charts -> chart_url chart_repo chart_name chart_version
 readarray -t HELM_CHARTS <<EOL_HELM_CHARTS
 https://openebs.github.io/openebs openebs openebs 4.1.1
+https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts csi-driver-nfs csi-driver-nfs v4.9.0
 https://charts.jetstack.io jetstack cert-manager v1.16.2
 https://kubernetes.github.io/ingress-nginx ingress-nginx ingress-nginx 4.12.0
 https://projectcalico.docs.tigera.io/charts projectcalico tigera-operator v3.29.1
@@ -322,13 +326,6 @@ else
   wget https://github.com/vmware-tanzu/velero/releases/download/v1.15.1/velero-v1.15.1-linux-amd64.tar.gz -P artefact
 fi
 
-# download age -> https://github.com/FiloSottile/age/releases/tag/v1.2.1
-if [ -f artefact/age-v1.2.1-linux-amd64.tar.gz ] ; then
-  echo "file exists artefact/age-v1.2.1-linux-amd64.tar.gz"
-else
-  wget https://github.com/FiloSottile/age/releases/download/v1.2.1/age-v1.2.1-linux-amd64.tar.gz -P artefact
-fi
-
 # download yq -> https://github.com/mikefarah/yq/releases
 if [ -f artefact/yq ] ; then
   echo "file exists artefact/yq" 
@@ -342,6 +339,64 @@ if [ -f artefact/sops ] ; then
 else
   wget https://github.com/getsops/sops/releases/download/v3.9.3/sops-v3.9.3.linux.amd64 -O artefact/sops
 fi
+
+# static nfs-server pod
+tee artefact/nfs-server-pod.yaml <<EOL_NFS_SERVER_POD
+pods:
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    name: nfs-server
+    namespace: kube-system
+    labels:
+      app: nfs-server
+  spec:
+    containers:
+    - image: docker.io/itsthenetwork/nfs-server-alpine:12
+      name: nfs-server
+      ports:
+      - name: tcp-2049 
+        containerPort: 2049
+        protocol: TCP
+      - name: udp-111
+        containerPort: 111
+        protocol: UDP
+      volumeMounts:
+      - mountPath: /data
+        name: nfs-storage
+      env:
+      - name: SHARED_DIRECTORY
+        value: /data
+      securityContext:
+        privileged: true
+    volumes:
+    - hostPath:
+        path: /var/local/nfs
+      type: DirectoryOrCreate
+      name: nfs-storage
+EOL_NFS_SERVER_POD
+
+# nfs-server service
+tee artefact/nfs-server-service.yaml <<EOL_NFS_SERVER_SERVICE
+kind: Service
+apiVersion: v1
+metadata:
+  name: nfs-server
+  namespace: kube-system
+  labels:
+    app: nfs-server
+spec:
+  type: ClusterIP
+  selector:
+    app: nfs-server
+  ports:
+  - name: tcp-2049
+    port: 2049
+    protocol: TCP
+  - name: udp-111
+    port: 111
+    protocol: UDP
+EOL_NFS_SERVER_SERVICE
 
 # issuer for cert-manager (letsencrypt) -> issuer-letsencrypt.yaml
 tee artefact/issuer-letsencrypt.yaml <<EOL_ISSUER
@@ -468,6 +523,11 @@ if [ -z "\$2" ] ; then
       --align center --margin "1 1" --padding "1 1" \
       'initialize kubernetes' 'select single node or cluster?'
     ARG2=\$(gum choose "single" "cluster")
+    gum style \
+      --foreground 212 --border-foreground 212 --border rounded \
+      --align center --margin "1 1" --padding "1 1" \
+      'select storage provider nfs or openebs?'
+    ARG3=\$(gum choose "nfs" "openebs")
   fi
 
   # join arguments: worker or controlplane and primary controlplane ip
@@ -551,10 +611,6 @@ tar Cxzf /tmp artefact/k9s_Linux_amd64.tar.gz $SUPRESS_STDERR && cp /tmp/k9s /us
 ################################################################################
 # install velero
 tar Cxzf /tmp artefact/velero-v1.15.1-linux-amd64.tar.gz $SUPRESS_STDERR && cp /tmp/velero-v1.15.1-linux-amd64/velero /usr/local/bin/
-
-################################################################################
-# install age and age-keygen
-tar Cxzf /tmp artefact/age-v1.2.1-linux-amd64.tar.gz $SUPRESS_STDERR && cp /tmp/age/age /tmp/age/age-keygen /usr/local/bin/
 
 ################################################################################
 # install yq
@@ -649,22 +705,49 @@ if [ \$SINGLE = true ] ; then
 
   printf "Install helm tigera-operator (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
 
-  ################################################################################
-  # install openebs openebs 4.1.1
-  gum spin --title "Install helm openebs ..." -- helm upgrade --install openebs helm/openebs-4.1.1.tgz \
-    --create-namespace \
-    --namespace openebs \
-    --set engines.replicated.mayastor.enabled=false \
-    --version 4.1.1
-  
-  BETWEEN=\$(date +%s)
-  BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
-  BETWEEN_SECONDS=\$((\$BETWEEN - \$SETUP_START - (\$BETWEEN_MINUTES * 60)))
+  if [ \$ARG3 = openebs ] ; then
+    ################################################################################
+    # install openebs openebs 4.1.1
+    gum spin --title "Install helm openebs ..." -- helm upgrade --install openebs helm/openebs-4.1.1.tgz \
+      --create-namespace \
+      --namespace openebs \
+      --set engines.replicated.mayastor.enabled=false \
+      --version 4.1.1
 
-  printf "Install helm openebs (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
+    # set default storage class
+    kubectl patch storageclass openebs-hostpath -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}' $SUPRESS_OUTPUT
 
-  # set default storage class
-  kubectl patch storageclass openebs-hostpath -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}' $SUPRESS_OUTPUT
+    BETWEEN=\$(date +%s)
+    BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
+    BETWEEN_SECONDS=\$((\$BETWEEN - \$SETUP_START - (\$BETWEEN_MINUTES * 60)))
+
+    printf "Install helm openebs (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
+  fi
+
+  if [ \$ARG3 = nfs ] ; then
+    ################################################################################
+    # install csi-driver-nfs
+    gum spin --title "Install helm csi-driver-nfs ..." -- helm upgrade --install csi-driver-nfs helm/csi-driver-nfs-v4.9.0.tgz \
+      --namespace kube-system \
+      --set storageClass.create=true \
+      --set storageClass.create.parameters.server="nfs-server.kube-system.svc.cluster.local" \
+      --version v4.9.0
+
+    # set default storage class
+    kubectl patch storageclass nfs-csi -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}' $SUPRESS_OUTPUT
+
+    # static nfs-server pod
+    cp artefact/nfs-server-pod.yaml /etc/kubernetes/manifests/
+
+    # nfs-server service
+    kubectl apply -f artefact/nfs-server-service.yaml $SUPRESS_OUTPUT
+
+    BETWEEN=\$(date +%s)
+    BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
+    BETWEEN_SECONDS=\$((\$BETWEEN - \$SETUP_START - (\$BETWEEN_MINUTES * 60)))
+
+    printf "Install helm csi-driver-nfs (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
+  fi
 
   ################################################################################
   # install ingress-nginx controller
