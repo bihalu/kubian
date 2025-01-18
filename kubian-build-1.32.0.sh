@@ -460,14 +460,14 @@ kind: KubeletConfiguration
 apiVersion: kubelet.config.k8s.io/v1beta1
 cgroupDriver: systemd
 evictionHard:
-  memory.available: "1024Mi"
+  memory.available: "256Mi"
   nodefs.available: "10%"
 kubeReserved:
-  cpu: "500m"
-  memory: "1Gi"
+  cpu: "250m"
+  memory: "256Mi"
 systemReserved:
-  cpu: "1"
-  memory: "1Gi"
+  cpu: "250m"
+  memory: "256Mi"
   ephemeral-storage: "10Gi"
 ---
 kind: ClusterConfiguration
