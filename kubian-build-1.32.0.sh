@@ -102,7 +102,7 @@ kubelet 1.32.0-1.1 amd64
 kubernetes-cni 1.6.0-1.1 amd64
 # containerd
 containerd 1.6.20~ds1-1+b1 amd64
-criu 3.17.1-2 amd64
+criu 3.17.1-2+deb12u1 amd64
 libnet1:amd64 1.1.6+dfsg-3.2 amd64
 libnl-3-200:amd64 3.7.0-0.2+b1 amd64
 libprotobuf32:amd64 3.21.12-3 amd64
