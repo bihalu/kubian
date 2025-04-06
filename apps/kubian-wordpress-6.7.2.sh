@@ -1,16 +1,16 @@
 #!/bin/bash
 
 NAME="kubian-wordpress"
-VERSION="6.4.3"
+VERSION="6.7.2"
 BUILD_START=$(date +%s)
 
 ################################################################################
 # container images for airgap installation
 readarray -t IMAGES <<EOL_IMAGES
 ################################################################################
-# wordpress 6.4.3 -> https://artifacthub.io/packages/helm/bitnami/wordpress/21.0.10
-docker.io/bitnami/wordpress:6.4.3-debian-12-r31
-docker.io/bitnami/mariadb:11.2.3-debian-12-r4
+# wordpress 6.7.2 -> https://artifacthub.io/packages/helm/bitnami/wordpress/24.2.1
+docker.io/bitnami/wordpress:6.7.2-debian-12-r11
+docker.io/bitnami/mariadb:11.4.5-debian-12-r9
 EOL_IMAGES
 
 CONTAINER_IMAGES=""
@@ -41,7 +41,7 @@ ctr images export container/images.tar $CONTAINER_IMAGES
 ################################################################################
 # helm charts -> chart_url chart_repo chart_name chart_version
 readarray -t HELM_CHARTS <<EOL_HELM_CHARTS
-https://charts.bitnami.com/bitnami bitnami wordpress 21.0.10
+https://charts.bitnami.com/bitnami bitnami wordpress 24.2.1
 EOL_HELM_CHARTS
 
 mkdir -p helm/
@@ -97,10 +97,10 @@ ctr -n=k8s.io image import container/images.tar
 ################################################################################
 # install wordpress
 if [ \$INSTALL = true ] ; then
-  helm upgrade --install wordpress helm/wordpress-21.0.10.tgz \
+  helm upgrade --install wordpress helm/wordpress-24.2.1.tgz \
     --create-namespace \
     --namespace wordpress \
-    --version 21.0.10 \
+    --version 24.2.1 \
     --set service.type=NodePort \
     --set service.nodePorts.http=30000 \
     --set mariadb.auth.rootPassword="topsecret" \

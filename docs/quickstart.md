@@ -1,5 +1,5 @@
 # Quickstart
-You need a clean Debian Linux version 12 (bookworm) with 4CPU, 8GB RAM and 40GB DISK.
+You need a clean Debian Linux version 12.10 (bookworm) with 4CPU, 8GB RAM and 40GB DISK.
 All commands are executed as root.  
 
 ## 1. Build Kubian setup package
@@ -8,14 +8,14 @@ cd ~
 apt install -y git
 git clone https://github.com/bihalu/kubian.git
 cd kubian
-./kubian-build-1.32.0.sh
+./kubian-build-1.32.3.sh
 ```
 Takes about 15 minutes ...  
 coffe break ;-)
 
 ## 2. Setup kubernetes single node cluster 
 ```bash
-./kubian-setup-1.32.0.tgz.self init single nfs
+./kubian-setup-1.32.3.tgz.self init single nfs
 ```
 Takes about 5 minutes ...  
 almost done   

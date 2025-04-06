@@ -305,11 +305,11 @@ else
   wget https://get.helm.sh/helm-v3.17.2-linux-amd64.tar.gz -P artefact
 fi
 
-# download k9s v0.32.7 -> https://github.com/derailed/k9s/releases/tag/v0.32.7
+# download k9s v0.40.10 -> https://github.com/derailed/k9s/releases/tag/v0.40.10
 if [ -f artefact/k9s_Linux_amd64.tar.gz ] ; then
   echo "file exists artefact/k9s_Linux_amd64.tar.gz"
 else
-  wget https://github.com/derailed/k9s/releases/download/v0.32.7/k9s_Linux_amd64.tar.gz -P artefact
+  wget https://github.com/derailed/k9s/releases/download/v0.40.10/k9s_Linux_amd64.tar.gz -P artefact
 fi
 
 # download velero -> https://github.com/vmware-tanzu/velero/releases/tag/v1.15.2
