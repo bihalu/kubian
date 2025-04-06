@@ -167,7 +167,7 @@ done
 
 ################################################################################
 # download gum package -> https://github.com/charmbracelet/gum
-wget https://github.com/charmbracelet/gum/releases/download/v0.14.5/gum_0.14.5_amd64.deb -P deb
+wget https://github.com/charmbracelet/gum/releases/download/v0.16.0/gum_0.16.0_amd64.deb -P deb
 
 ################################################################################
 # container images for airgap installation
@@ -364,7 +364,7 @@ spec:
   volumes:
   - hostPath:
       path: /var/local/nfs
-    type: DirectoryOrCreate
+      type: DirectoryOrCreate
     name: nfs-storage
 EOL_NFS_SERVER_POD
 
@@ -491,7 +491,7 @@ SETUP_START=\$(date +%s)
 
 ################################################################################
 # install gum (silent ;-)
-dpkg --install deb/gum_0.14.5_amd64.deb $SUPRESS_OUTPUT
+dpkg --install deb/gum_0.16.0_amd64.deb $SUPRESS_OUTPUT
 
 ################################################################################
 # install packages
