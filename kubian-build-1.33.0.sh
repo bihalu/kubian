@@ -871,7 +871,7 @@ fi
 ################################################################################
 # upgrade primary controlplane
 if [ \$UPGRADE = true ] && [ \$PRIMARY = true ] ; then
-  gum spin --show-output --title "Upgrade primary contolplane ..." -- kubeadm upgrade apply $VERSION --yes
+  gum spin --show-output --title "Upgrade primary controlplane ..." -- kubeadm upgrade apply $VERSION --yes
 
   systemctl restart kubelet $SUPRESS_OUTPUT
 
@@ -883,10 +883,12 @@ if [ \$UPGRADE = true ] && [ \$PRIMARY = true ] ; then
   kubectl wait --timeout=1m --for=condition=Ready node/\$HOSTNAME
   [ \$? != 0 ] && echo "ERROR: can't upgrade primary controlplane" && exit 1
 
-  printf "Upgrade primary contolplane (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
+  printf "Upgrade primary controlplane (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
 
   ################################################################################
   # install projectcalico tigera-operator v3.30.0
+  kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.30.0/manifests/operator-crds.yaml
+
   gum spin --title "Install helm tigera-operator ..." -- helm upgrade --install tigera-operator helm/tigera-operator-v3.30.0.tgz \
     --create-namespace \
     --namespace tigera-operator \
