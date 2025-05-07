@@ -679,7 +679,7 @@ if [ \$INIT = true ] ; then
   IP_ADDRESS=\$(ip -brief address show \$NETWORK_INTERFACE | awk '{print \$3}' | awk -F/ '{print \$1}')
   echo "controlPlaneEndpoint: \$IP_ADDRESS" >> artefact/kubeadm-config.yaml
 
-  gum spin --title "Init kubernetes cluster ..." -- kubeadm init --upload-certs --node-name=\$HOSTNAME --config artefact/kubeadm-config.yaml
+  gum spin --show-output --title "Init kubernetes cluster ..." -- kubeadm init --upload-certs --node-name=\$HOSTNAME --config artefact/kubeadm-config.yaml
   [ \$? != 0 ] && echo "ERROR: can't initialize cluster" && exit 1
 
   BETWEEN=\$(date +%s)
@@ -871,7 +871,7 @@ fi
 ################################################################################
 # upgrade primary controlplane
 if [ \$UPGRADE = true ] && [ \$PRIMARY = true ] ; then
-  OUTPUT_UPGRADE=\$(gum spin --show-output --title "Upgrade primary contolplane ..." -- kubeadm upgrade apply $VERSION --yes)
+  gum spin --show-output --title "Upgrade primary contolplane ..." -- kubeadm upgrade apply $VERSION --yes
 
   systemctl restart kubelet $SUPRESS_OUTPUT
 
@@ -881,7 +881,7 @@ if [ \$UPGRADE = true ] && [ \$PRIMARY = true ] ; then
 
   # give grace period of 1 minute to get node ready
   kubectl wait --timeout=1m --for=condition=Ready node/\$HOSTNAME
-  [ \$? != 0 ] && echo "\$OUTPUT_UPGRADE" && exit 1
+  [ \$? != 0 ] && echo "ERROR: can't upgrade primary controlplane" && exit 1
 
   printf "Upgrade primary contolplane (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
 
@@ -892,8 +892,8 @@ if [ \$UPGRADE = true ] && [ \$PRIMARY = true ] ; then
     --namespace tigera-operator \
     --version v3.30.0
   if [ \$? != 0 ] ; then
-    # give grace period of 2 minutes to get node ready
-    kubectl wait --timeout=2m --for=condition=Ready node/\$HOSTNAME
+    # give grace period of 3 minutes to get node ready
+    kubectl wait --timeout=3m --for=condition=Ready node/\$HOSTNAME
     [ \$? != 0 ] && echo "ERROR: can't install tigera operator" && exit 1
   fi
 
@@ -964,7 +964,13 @@ if [ \$UPGRADE = true ] && [ \$NODE = true ] ; then
 
   kubectl drain \$HOSTNAME --ignore-daemonsets
 
-  kubeadm upgrade node
+  gum spin --title "Upgrade node ..." -- kubeadm upgrade node
+
+  BETWEEN=\$(date +%s)
+  BETWEEN_MINUTES=\$(((\$BETWEEN - \$SETUP_START) / 60))
+  BETWEEN_SECONDS=\$((\$BETWEEN - \$SETUP_START - (\$BETWEEN_MINUTES * 60)))
+
+  printf "Upgrade node (%02d:%02d)\n" \$BETWEEN_MINUTES \$BETWEEN_SECONDS
 
   systemctl daemon-reload
 
