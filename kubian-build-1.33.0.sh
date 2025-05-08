@@ -333,6 +333,13 @@ else
   wget https://github.com/getsops/sops/releases/download/v3.10.2/sops-v3.10.2.linux.amd64 -O artefact/sops
 fi
 
+# download tigera operator crds
+if [ -f artefact/operator-crds.yaml ] ; then
+  echo "file exists artefact/operator-crds.yaml" 
+else
+  wget https://raw.githubusercontent.com/projectcalico/calico/v3.30.0/manifests/operator-crds.yaml -O artefact/operator-crds.yaml
+fi
+
 # static nfs-server pod
 tee artefact/nfs-server-pod.yaml <<EOL_NFS_SERVER_POD
 kind: Pod
@@ -887,7 +894,7 @@ if [ \$UPGRADE = true ] && [ \$PRIMARY = true ] ; then
 
   ################################################################################
   # install projectcalico tigera-operator v3.30.0
-  kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.30.0/manifests/operator-crds.yaml
+  kubectl apply -f artefact/operator-crds.yaml $SUPRESS_OUTPUT $SUPRESS_STDERR
 
   gum spin --title "Install helm tigera-operator ..." -- helm upgrade --install tigera-operator helm/tigera-operator-v3.30.0.tgz \
     --create-namespace \
