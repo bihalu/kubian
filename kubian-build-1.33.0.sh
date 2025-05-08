@@ -679,7 +679,7 @@ if [ \$INIT = true ] ; then
   IP_ADDRESS=\$(ip -brief address show \$NETWORK_INTERFACE | awk '{print \$3}' | awk -F/ '{print \$1}')
   echo "controlPlaneEndpoint: \$IP_ADDRESS" >> artefact/kubeadm-config.yaml
 
-  gum spin --show-output --title "Init kubernetes cluster ..." -- kubeadm init --upload-certs --node-name=\$HOSTNAME --config artefact/kubeadm-config.yaml
+  gum spin --title "Init kubernetes cluster ..." -- kubeadm init --upload-certs --node-name=\$HOSTNAME --config artefact/kubeadm-config.yaml
   [ \$? != 0 ] && echo "ERROR: can't initialize cluster" && exit 1
 
   BETWEEN=\$(date +%s)
@@ -871,7 +871,7 @@ fi
 ################################################################################
 # upgrade primary controlplane
 if [ \$UPGRADE = true ] && [ \$PRIMARY = true ] ; then
-  gum spin --show-output --title "Upgrade primary controlplane ..." -- kubeadm upgrade apply $VERSION --yes
+  gum spin --title "Upgrade primary controlplane ..." -- kubeadm upgrade apply $VERSION --yes
 
   systemctl restart kubelet $SUPRESS_OUTPUT
 
@@ -964,7 +964,7 @@ fi
 if [ \$UPGRADE = true ] && [ \$NODE = true ] ; then
   echo "upgrade node"
 
-  kubectl drain \$HOSTNAME --ignore-daemonsets
+  kubectl drain \$HOSTNAME --ignore-daemonsets --delete-emptydir-data
 
   gum spin --title "Upgrade node ..." -- kubeadm upgrade node
 
